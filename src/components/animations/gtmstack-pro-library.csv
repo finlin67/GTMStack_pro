@@ -1,0 +1,13 @@
+Route,Title,Media Type,Local File Name,Notes
+/expertise/video-marketing,Video Marketing,animation,Video-Marketing-Analytics.tsx,hero-tiles
+/expertise/search-engine-optimization,SEO,animation,SEO-GrowthFlow.tsx,hero-tiles
+/expertise/marketing-operations,Marketing Operations,animation,Marketing-Analytics-Carousel.tsx,hero-tiles
+/expertise/marketing-automation,Marketing Automation,animation,Marketing-Automation-Live-Feed.tsx,hero-tiles
+/expertise/account-based-marketing-abm,ABM,animation,ABM-Pipeline-Strategy.tsx,hero-tiles
+/,GTMStack,animation,GTMStackPro.tsx,hero-tiles
+/expertise/marketing-operations,Marketing Operations,animation,PipelineDashboard.tsx,hero-tiles
+/expertise/omnichannel-marketing,Omnichannel Marketing,animation,QuantumDashboard.tsx,hero-tiles
+/expertise/demand-generation,Demand Generation,animation,DemandGenFlow.tsx,hero-tiles
+/industries/manufacturing,Manufacturing,animation,IndustrialDashboard.tsx,hero-tiles
+/industries/manufacturing,Manufacturing,animation,Industrial-MFG-Tile.tsx,hero-tiles
+/expertise/omnichannel-marketing,Omnichannel Marketing,animation,Omni-Analytics.tsx,hero-tiles
