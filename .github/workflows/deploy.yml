@@ -2,8 +2,9 @@ name: Build and Deploy Static Site
 
 on:
   push:
-    branches: ["main"]
-  workflow_dispatch: {}
+    branches:
+      - main
+  workflow_dispatch:
 
 jobs:
   build-deploy:
@@ -22,9 +23,19 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # Build your static export.
-      # This assumes your Next.js config includes: output: "export"
-      # and that build outputs to the "out/" folder.
+      - name: Check WordPress API (non-fatal)
+        env:
+          WORDPRESS_API_URL: ${{ secrets.WORDPRESS_API_URL }}
+        run: |
+          if [ -z "$WORDPRESS_API_URL" ]; then
+            echo "WORDPRESS_API_URL secret is MISSING"
+          else
+            URL="$WORDPRESS_API_URL/posts?per_page=1&_fields=id,slug,status"
+            echo "Checking: $URL"
+            code=$(curl -sS -L -A "Mozilla/5.0" -o /dev/null -w "%{http_code}" "$URL" || true)
+            echo "WordPress API HTTP status: $code"
+          fi
+
       - name: Build static site
         env:
           WORDPRESS_API_URL: ${{ secrets.WORDPRESS_API_URL }}
@@ -33,33 +44,17 @@ jobs:
       - name: Sanity check build output exists
         run: |
           test -d out
-          ls -la out
           test -f out/index.html
+          echo "Build output looks good."
 
-      # Optional but very helpful: confirms the SSH user can write to the target folder.
-      - name: Test SSH + permissions
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SFTP_HOST }}
-          username: ${{ secrets.SFTP_USER }}
-          key: ${{ secrets.SFTP_KEY }}
-          port: ${{ secrets.SFTP_PORT }}
-          script: |
-            pwd
-            ls -la
-            mkdir -p domains/gtmstack.pro/public_html/.ci_test
-            echo "ok" > domains/gtmstack.pro/public_html/.ci_test/ok.txt
-            ls -la domains/gtmstack.pro/public_html/.ci_test
-
-      # Deploy the static site contents to Hostinger.
-      - name: Deploy via SFTP (SCP upload)
+      - name: Deploy via SFTP
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.SFTP_HOST }}
           username: ${{ secrets.SFTP_USER }}
           key: ${{ secrets.SFTP_KEY }}
           port: ${{ secrets.SFTP_PORT }}
-          source: "out/*"
+          source: out/*
           target: ${{ secrets.SFTP_TARGET }}
           strip_components: 1
           overwrite: true
