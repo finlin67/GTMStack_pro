@@ -41,6 +41,7 @@ module.exports = (phase) => {
   }
   if (!isDev) {
     config.output = 'export'
+    config.trailingSlash = true
   }
   return withMDX(config)
 }
