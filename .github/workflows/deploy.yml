@@ -23,7 +23,6 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # Non-fatal connectivity check (prints status, does NOT fail the build)
       - name: Check WordPress API (non-fatal)
         env:
           WORDPRESS_API_URL: ${{ secrets.WORDPRESS_API_URL }}
@@ -48,7 +47,7 @@ jobs:
           test -f out/index.html
           echo "Build output looks good."
 
-       - name: Deploy via SFTP
+      - name: Deploy via SFTP
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.SFTP_HOST }}
