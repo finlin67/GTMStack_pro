@@ -332,9 +332,10 @@ export default function SEOAnimation() {
         <div className="flex items-center gap-4">
           <div className="flex -space-x-2.5">
             {[1, 2, 3, 4].map(i => (
-              <img 
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
                 key={i}
-                className="size-7 rounded-full border-2 border-[#020617] object-cover ring-1 ring-emerald-500/20" 
+                className="size-7 rounded-full border-2 border-[#020617] object-cover ring-1 ring-emerald-500/20"
                 src={`https://api.dicebear.com/7.x/avataaars/svg?seed=growth${i}`}
                 alt="Expert"
               />

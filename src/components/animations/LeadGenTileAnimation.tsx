@@ -125,10 +125,11 @@ export default function LeadGenTileAnimation() {
     }, 3000);
   };
 
-  // Interval to spawn particles
+  // Interval to spawn particles (mount-only; spawnParticle omitted to avoid resetting interval)
   useEffect(() => {
     const interval = setInterval(() => spawnParticle(), 1500);
     return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Conversion rate calculation

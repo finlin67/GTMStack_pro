@@ -446,6 +446,7 @@ export function HeroVisual({
       {pathwaySvg && !svgError && (
         <div className="absolute inset-0 z-40 opacity-[0.12] pointer-events-none">
           {/* Use native img for SVG overlay to avoid Next/Image loader rejection on some SVGs */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={pathwaySvg}
             alt=""

@@ -223,10 +223,12 @@ const DemandGenerationHero: React.FC<DemandGenerationHeroProps> = ({
 
     return () => {
       clearInterval(interval)
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current)
-      }
+      // eslint-disable-next-line react-hooks/exhaustive-deps -- ref read at cleanup is intentional
+      const frameId = animationFrameRef.current
+      if (frameId) cancelAnimationFrame(frameId)
     }
+    // showMetrics omitted to avoid reordering; effect depends on wave interval and pause state only
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isPaused, prefersReducedMotion, createProspectWave, adjustedWaveInterval])
 
   // Show metric counters

@@ -315,7 +315,9 @@ export default function VideoMarketingAnalyticsTile() {
         >
           <div className="flex items-center gap-3">
             <div className="flex -space-x-2">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img className="size-6 rounded-full border border-background-dark object-cover" alt="User 1" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBq4ZK63JkY6Q2ht6j-mt7Y88MiNpwUWYx_6m-lXPvvPSn1kw2LO2ox47nF8AER2QtJVE7pQ2B0enBF2EczKum9fpRiSO8NF0Gr62ruD2E4KrEwATFgOpWc3egFAgpjoUtxbImo71OMV66_9BVnJtSFnZ9q-c2CW_qmTcYzq_NwYJDVvT8gGDbhHd_IgyyFcJuI8BEpvLduwh5PZ_My4SyOnn17wKRxH8WpZ_yve-NCPRt9yCRzRWe5fspMZ72KNi0mlPTxhsdAwMA3"/>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img className="size-6 rounded-full border border-background-dark object-cover" alt="User 2" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDX78Y7EKU9-im3VNpiTE2Js_HqhCqUhpMrm6GIPND5yVHIejpYClLmCcD2l06_51muz-BWAav2luj6TENV8u6Id_A-YpnU5wPKdaXn9y0Daf7HeYYMys6erZEQG1lKhx4CicybCnwd6iZVi452Ws6dzuUVfjG12M-0U68UHauJ76LFVqsJZcV3fVh9io7gdxkdwOWUGdk9r1ECMR_4F2_zKXMlNDHHuhIVcr21x8txrRtRZPciaCPgZn_0dZieGtuBHmTtJzkzjyLG"/>
               <div className="size-6 rounded-full border border-background-dark bg-ui-dark flex items-center justify-center text-[7px] font-bold text-white">
                 +5k

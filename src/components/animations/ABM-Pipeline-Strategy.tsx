@@ -123,6 +123,7 @@ export default function ABMPipelineStrategy() {
             </div>
             <button className="text-slate-400 hover:text-[#00d2ff] transition-colors"><Settings size={16} /></button>
             <div className="w-7 h-7 rounded-full border border-[#00d2ff]/30 overflow-hidden">
+               {/* eslint-disable-next-line @next/next/no-img-element */}
                <img src="https://picsum.photos/100/100?random=88" alt="Profile" className="w-full h-full object-cover" />
             </div>
           </div>

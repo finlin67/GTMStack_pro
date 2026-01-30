@@ -245,6 +245,7 @@ const PerformanceChart: React.FC = () => {
     return () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- mount-only timer; updateData intentionally omitted to avoid resets
   }, []);
 
   return (
