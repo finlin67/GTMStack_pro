@@ -1,4 +1,4 @@
-name: Build and Deploy Static Site
+name: Build and Deploy Static Site (SFTP)
 
 on:
   push:
@@ -21,11 +21,13 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build static site
+      - name: Build (static export)
         env:
           WORDPRESS_API_URL: ${{ secrets.WORDPRESS_API_URL }}
         run: npm run build
 
+      # If your project outputs to "out/", this will deploy it.
+      # If your output folder is different, change "local-path".
       - name: Deploy via SFTP
         uses: appleboy/scp-action@v0.1.7
         with:
