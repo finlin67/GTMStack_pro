@@ -133,6 +133,7 @@ export function ExpertiseHeroVisual({ animation, config, borderClassName, tileVa
   const animationEntry = currentAnimId ? getAnimationById(currentAnimId) : null
   const availableAnimations = marketingFunction ? getAnimationsByFunction(marketingFunction) : []
   const hasMultipleVariants = availableAnimations.length > 1
+  const isDemandGeneration = marketingFunction === 'demand-generation'
 
   if (animationEntry?.component) {
     const Component = animationEntry.component

@@ -391,6 +391,13 @@ export function getAnimationById(id: string): AnimationEntry | undefined {
 }
 
 /**
+ * Get all animation IDs (for generateStaticParams)
+ */
+export function getAllAnimationIds(): string[] {
+  return ANIMATION_REGISTRY.map((anim) => anim.id)
+}
+
+/**
  * Get featured animations
  */
 export function getFeaturedAnimations(): AnimationEntry[] {

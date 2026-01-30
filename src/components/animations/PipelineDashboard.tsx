@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import {
   Gauge,
   Bell,
@@ -24,7 +24,7 @@ const TabularNum = ({ children, className = "" }: { children?: React.ReactNode, 
 );
 
 export default function PipelineDashboard() {
-  const navigate = useNavigate();
+  const router = useRouter();
 
   // --- State ---
   const [gaugeValue, setGaugeValue] = useState(78);
@@ -268,7 +268,7 @@ export default function PipelineDashboard() {
                 className="w-full py-1.5 px-3 bg-[#3abff8]/10 hover:bg-[#3abff8]/20 text-[#3abff8] rounded-lg text-[10px] font-bold uppercase tracking-wide border border-[#3abff8]/20 transition-all active:scale-95 flex items-center justify-center hover:shadow-[0_0_10px_rgba(58,191,248,0.2)]"
                 onClick={(e) => {
                   e.stopPropagation();
-                  navigate('/lead/12345');
+                  router.push('/lead/12345');
                 }}
               >
                 View Details

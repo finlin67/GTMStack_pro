@@ -13,7 +13,7 @@ import { FadeIn } from '@/components/motion/FadeIn'
 import { IndustryItem, ExpertiseItem, CaseStudyItem } from '@/lib/types'
 import { TopoBackdrop, SignalField } from '@/components/motifs'
 import { RelatedCaseStudies } from '@/components/ui/RelatedItems'
-import { HERO_VISUALS } from '@/lib/heroVisuals'
+import { HERO_VISUALS, type HeroVisual } from '@/lib/heroVisuals'
 import { ensureHeroVisualWithImage } from '@/lib/heroVisualDefaults'
 import { getHeroVisualForPath } from '@/lib/heroVisualRegistry'
 import {
@@ -71,7 +71,7 @@ export default function IndustryPageContent({ industry, featuredExpertise, featu
       'industries'
     ) ?? HERO_VISUALS.defaults.detail
 
-  let heroVisual: ReactNode = fallbackHeroVisual
+  let heroVisual: ReactNode | HeroVisual = fallbackHeroVisual
   if (routeAnimations.length > 0 && rotatedEntry) {
     heroVisual = renderAnimationTile(rotatedEntry)
   } else if (routeAnimations.length === 0 && registryEntry?.mediaType === 'animation' && registryEntry.component) {

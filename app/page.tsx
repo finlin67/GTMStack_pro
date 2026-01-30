@@ -2,7 +2,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { ArrowRight, Target, BarChart3, Workflow, TrendingUp, CheckCircle2, Building2, DollarSign, Calendar, Minus, Plus, FileText, Settings } from 'lucide-react'
 import { HeroDark } from '@/components/ui/HeroDark'
-import { HERO_VISUALS } from '@/lib/heroVisuals'
+import { HERO_VISUALS, type HeroVisual } from '@/lib/heroVisuals'
 import ProblemPromise from '@/components/sections/ProblemPromise'
 import { SectionDark } from '@/components/layout/SectionDark'
 import { SectionLight } from '@/components/layout/SectionLight'
@@ -45,7 +45,7 @@ export default function HomePage() {
   const featuredCaseStudies = getFeaturedCaseStudies().slice(0, 3)
 
   const homeHeroEntry = getHeroVisualForPath('/')
-  let homeRightVisual: React.ReactNode | { variant: string } = { variant: 'signatureConstellation' }
+  let homeRightVisual: React.ReactNode | HeroVisual = { variant: 'signatureConstellation' }
 
   if (homeHeroEntry?.mediaType === 'animation' && homeHeroEntry.component) {
     const HomeVisual = homeHeroEntry.component

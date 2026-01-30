@@ -1,5 +1,5 @@
 import { Metadata } from 'next'
-import React from 'react'
+import React, { Suspense } from 'react'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import * as Icons from 'lucide-react'
@@ -128,12 +128,14 @@ export default function ExpertiseDetailPage({ params }: Props) {
 
   return (
     <>
-      <ExpertiseHero
-        item={item}
-        pillar={pillar}
-        config={heroConfig}
-        icon={IconComponent}
-      />
+      <Suspense fallback={<div className="min-h-[60vh] bg-slate-900" />}>
+        <ExpertiseHero
+          item={item}
+          pillar={pillar}
+          config={heroConfig}
+          icon={IconComponent}
+        />
+      </Suspense>
 
       {/* Who this is for / Signals (Light) */}
       <SectionLight variant="white" className="overflow-hidden">
