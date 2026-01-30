@@ -14,9 +14,11 @@ export type WPPost = {
 };
 
 /**
- * Server-only helper:
  * Read WORDPRESS_API_URL at call-time (not module top-level),
  * and sanitize common copy/paste issues.
+ *
+ * Expected value:
+ *   https://m.gtmstack.pro/wp-json/wp/v2
  */
 function getBaseUrl(): string {
   const raw = process.env.WORDPRESS_API_URL;
@@ -32,9 +34,11 @@ function getBaseUrl(): string {
   return base;
 }
 
-export async function getPosts() {
+export async function getPosts(): Promise<WPPost[]> {
   const url = `${getBaseUrl()}/posts?per_page=10&_embed=1`;
-  const res = await fetch(url, { cache: "no-store" }); // during build, always fetch fresh
+
+  // For static export builds, ensure we fetch fresh content at build time
+  const res = await fetch(url, { cache: "no-store" });
 
   if (!res.ok) {
     const text = await res.text().catch(() => "");
@@ -44,7 +48,7 @@ export async function getPosts() {
   return (await res.json()) as WPPost[];
 }
 
-export async function getPostBySlug(slug: string) {
+export async function getPostBySlug(slug: string): Promise<WPPost | null> {
   const url = `${getBaseUrl()}/posts?slug=${encodeURIComponent(slug)}&_embed=1`;
   const res = await fetch(url, { cache: "no-store" });
 
