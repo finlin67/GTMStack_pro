@@ -1,92 +1,69 @@
-import { Metadata } from "next";
+"use client";
+
 import Link from "next/link";
-import { getPosts } from "@/lib/wordpress";
-import { SectionDark } from "@/components/layout/SectionDark";
-import { SectionLight } from "@/components/layout/SectionLight";
-import { SectionHeader } from "@/components/layout/Section";
-import { FadeIn } from "@/components/motion/FadeIn";
-import { SignalField } from "@/components/motifs";
-import { FileText } from "lucide-react";
+import { useEffect, useState } from "react";
+import { fetchPosts, WPPost } from "@/lib/wp-client";
 
-export const metadata: Metadata = {
-  title: "Blog",
-  description: "GTM strategy, demand gen, and go-to-market insights from GTMstack.pro.",
-};
+export default function BlogPage() {
+  const [posts, setPosts] = useState<WPPost[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string>("");
 
-export default async function BlogPage() {
-  const posts = await getPosts();
+  useEffect(() => {
+    (async () => {
+      try {
+        const data = await fetchPosts();
+        setPosts(data);
+      } catch (e: any) {
+        setError(e?.message || "Failed to load posts");
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
 
-  // Normalize fields for your UI (strip HTML from title/excerpt)
   const stripHtml = (html: string) => html.replace(/<[^>]*>/g, "").trim();
 
-  const items = posts.map((p) => ({
-    slug: p.slug,
-    title: stripHtml(p.title?.rendered ?? ""),
-    excerpt: stripHtml(p.excerpt?.rendered ?? ""),
-    date: p.date ? new Date(p.date).toLocaleDateString() : "",
-  }));
-
   return (
-    <>
-      <SectionDark variant="hero" motif="signal" padding="lg" className="overflow-hidden">
-        <div className="absolute inset-0 pointer-events-none opacity-10">
-          <SignalField intensity="subtle" pattern="constellation" density="sparse" />
+    <main className="mx-auto max-w-3xl px-6 py-12">
+      <h1 className="text-3xl font-semibold">Blog</h1>
+      <p className="mt-2 text-slate-600">
+        Posts are loaded live from WordPress (no rebuild required).
+      </p>
+
+      {loading && <p className="mt-8">Loading…</p>}
+
+      {!loading && error && (
+        <div className="mt-8 rounded-lg border border-red-200 bg-red-50 p-4 text-red-700">
+          {error}
         </div>
-        <div className="container-width relative z-10">
-          <FadeIn>
-            <h1 className="font-display text-4xl md:text-5xl font-bold text-white mb-4">Blog</h1>
-            <p className="text-lg text-slate-200 max-w-2xl">
-              GTM strategy, demand gen, and go-to-market insights.
-            </p>
-          </FadeIn>
+      )}
+
+      {!loading && !error && posts.length === 0 && (
+        <div className="mt-8 rounded-lg border border-slate-200 bg-slate-50 p-6">
+          No posts yet.
         </div>
-      </SectionDark>
+      )}
 
-      <SectionLight variant="white" className="overflow-hidden">
-        <div className="container-width">
-          {items.length === 0 ? (
-            <FadeIn>
-              <div className="rounded-2xl border border-slate-200 bg-slate-50/50 p-12 text-center">
-                <FileText className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-                <h2 className="text-xl font-semibold text-slate-800 mb-2">No posts yet</h2>
-                <p className="text-slate-600 max-w-md mx-auto">
-                  We haven’t published any posts yet. Check back soon for GTM insights and updates.
-                </p>
-              </div>
-            </FadeIn>
-          ) : (
-            <>
-              <SectionHeader
-                label="Posts"
-                title="Latest"
-                description={`${items.length} post${items.length === 1 ? "" : "s"}`}
-                className="mb-8"
-              />
-
-              <ul className="space-y-4">
-                {items.map((post) => (
-                  <li key={post.slug}>
-                    <Link
-                      href={`/blog/${post.slug}`}
-                      className="block rounded-xl border border-slate-200 bg-white p-6 shadow-soft hover:shadow-strong hover:border-brand-500/30 transition-all"
-                    >
-                      <h2 className="font-semibold text-lg text-slate-900 mb-2">
-                        {post.title || post.slug}
-                      </h2>
-
-                      {post.excerpt ? (
-                        <p className="text-slate-600 text-sm leading-relaxed">{post.excerpt}</p>
-                      ) : null}
-
-                      {post.date ? <p className="text-slate-400 text-xs mt-2">{post.date}</p> : null}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </>
-          )}
-        </div>
-      </SectionLight>
-    </>
+      <ul className="mt-8 space-y-4">
+        {posts.map((p) => (
+          <li key={p.id} className="rounded-xl border border-slate-200 bg-white p-5">
+            <h2 className="text-lg font-semibold">
+              <Link className="hover:underline" href={`/blog/post?slug=${p.slug}`}>
+                {stripHtml(p.title?.rendered || p.slug)}
+              </Link>
+            </h2>
+            {p.excerpt?.rendered ? (
+              <p className="mt-2 text-slate-600 text-sm">{stripHtml(p.excerpt.rendered)}</p>
+            ) : null}
+            {p.date ? (
+              <p className="mt-2 text-xs text-slate-400">
+                {new Date(p.date).toLocaleDateString()}
+              </p>
+            ) : null}
+          </li>
+        ))}
+      </ul>
+    </main>
   );
 }
