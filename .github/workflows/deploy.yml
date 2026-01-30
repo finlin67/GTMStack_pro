@@ -22,6 +22,25 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+              - name: Debug env (safe)
+        run: |
+          if [ -z "${{ secrets.WORDPRESS_API_URL }}" ]; then
+            echo "WORDPRESS_API_URL secret is EMPTY"
+            exit 1
+          else
+            echo "WORDPRESS_API_URL secret is PRESENT"
+          fi
+
+      - name: Debug: check WordPress posts reachable
+        env:
+          WORDPRESS_API_URL: ${{ secrets.WORDPRESS_API_URL }}
+        run: |
+          echo "Checking posts endpoint..."
+          code=$(curl -s -o /dev/null -w "%{http_code}" "$WORDPRESS_API_URL/posts?per_page=1")
+          echo "HTTP status: $code"
+          test "$code" = "200"
+
+
       # Build your static export.
       # This assumes your Next.js config includes: output: "export"
       # and that build outputs to the "out/" folder.
