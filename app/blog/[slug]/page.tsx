@@ -1,9 +1,15 @@
 import { notFound } from "next/navigation";
-import { getPostBySlug } from "@/lib/wordpress";
+import { getPostBySlug, getPosts } from "@/lib/wordpress";
 
 type Props = {
   params: { slug: string };
 };
+
+// Required for output: "export"
+export async function generateStaticParams() {
+  const posts = await getPosts();
+  return posts.map((post) => ({ slug: post.slug }));
+}
 
 export default async function BlogPostPage({ params }: Props) {
   const post = await getPostBySlug(params.slug);
