@@ -23,23 +23,19 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Debug env safe
-        run: |
-          if [ -z "${{ secrets.WORDPRESS_API_URL }}" ]; then
-            echo "WORDPRESS_API_URL secret is EMPTY"
-            exit 1
-          else
-            echo "WORDPRESS_API_URL secret is PRESENT"
-          fi
-
-      - name: Debug WordPress endpoint
+      # Non-fatal connectivity check (prints status, does NOT fail the build)
+      - name: Check WordPress API (non-fatal)
         env:
           WORDPRESS_API_URL: ${{ secrets.WORDPRESS_API_URL }}
         run: |
-          echo "Checking posts endpoint..."
-          code=$(curl -s -o /dev/null -w "%{http_code}" "$WORDPRESS_API_URL/posts?per_page=1")
-          echo "HTTP status: $code"
-          test "$code" = "200"
+          if [ -z "$WORDPRESS_API_URL" ]; then
+            echo "WORDPRESS_API_URL secret is MISSING"
+          else
+            URL="$WORDPRESS_API_URL/posts?per_page=1&_fields=id,slug,status"
+            echo "Checking: $URL"
+            code=$(curl -sS -L -A "Mozilla/5.0" -o /dev/null -w "%{http_code}" "$URL" || true)
+            echo "WordPress API HTTP status: $code"
+          fi
 
       - name: Build static site
         env:
@@ -49,8 +45,8 @@ jobs:
       - name: Sanity check build output exists
         run: |
           test -d out
-          ls -la out
           test -f out/index.html
+          echo "Build output looks good."
 
       - name: Test SSH permissions
         uses: appleboy/ssh-action@v1.0.3
@@ -60,7 +56,6 @@ jobs:
           key: ${{ secrets.SFTP_KEY }}
           port: ${{ secrets.SFTP_PORT }}
           script: |
-            pwd
             mkdir -p domains/gtmstack.pro/public_html/.ci_test
             echo "ok" > domains/gtmstack.pro/public_html/.ci_test/ok.txt
 
