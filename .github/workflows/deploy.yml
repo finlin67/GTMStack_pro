@@ -48,18 +48,7 @@ jobs:
           test -f out/index.html
           echo "Build output looks good."
 
-      - name: Test SSH permissions
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SFTP_HOST }}
-          username: ${{ secrets.SFTP_USER }}
-          key: ${{ secrets.SFTP_KEY }}
-          port: ${{ secrets.SFTP_PORT }}
-          script: |
-            mkdir -p domains/gtmstack.pro/public_html/.ci_test
-            echo "ok" > domains/gtmstack.pro/public_html/.ci_test/ok.txt
-
-      - name: Deploy via SFTP
+       - name: Deploy via SFTP
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.SFTP_HOST }}
