@@ -71,6 +71,24 @@ export function MobileMegaMenu({ isOpen, onClose }: MobileMegaMenuProps) {
           className="bg-slate-950/95 backdrop-blur-lg border-b border-white/10"
         >
           <div className="container-width py-4 space-y-1">
+            {/* Quick links */}
+            <div className="flex flex-wrap gap-2 pb-4 mb-4 border-b border-white/10">
+              <Link href="/case-studies" onClick={onClose} className="px-4 py-2 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-white/10">
+                Case Studies
+              </Link>
+              <Link href="/gallery" onClick={onClose} className="px-4 py-2 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-white/10">
+                Gallery
+              </Link>
+              <Link href="/industries" onClick={onClose} className="px-4 py-2 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-white/10">
+                Industries
+              </Link>
+              <Link href="/about" onClick={onClose} className="px-4 py-2 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-white/10">
+                About
+              </Link>
+              <Link href="/contact" onClick={onClose} className="px-4 py-2 rounded-lg text-sm font-medium bg-brand-500/20 text-brand-300 hover:bg-brand-500/30">
+                Contact
+              </Link>
+            </div>
             {/* Pillar Accordions */}
             {pillars.map((pillar) => {
               const pillarIconName = pillarIcons[pillar.id]

@@ -208,6 +208,12 @@ export default function Navbar() {
             >
               Case Studies
             </Link>
+            <Link
+              href="/gallery"
+              className="text-sm font-medium text-slate-700 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 rounded"
+            >
+              Gallery
+            </Link>
             <div className="relative">
               <button
                 ref={industriesButtonRef}
