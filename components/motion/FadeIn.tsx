@@ -92,6 +92,8 @@ interface StaggerContainerProps {
   className?: string
   staggerDelay?: number
   delayStart?: number
+  /** DIAGNOSTIC: when true, renders a plain div (no motion) */
+  noMotion?: boolean
 }
 
 export function StaggerContainer({
@@ -99,6 +101,7 @@ export function StaggerContainer({
   className,
   staggerDelay = 0.1,
   delayStart = 0,
+  noMotion = false,
 }: StaggerContainerProps) {
   const [hydrated, setHydrated] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
@@ -119,7 +122,7 @@ export function StaggerContainer({
     },
   }
 
-  if (!hydrated || shouldReduceMotion) {
+  if (noMotion || !hydrated || shouldReduceMotion) {
     return (
       <div ref={ref} className={className}>
         {children}
@@ -172,7 +175,11 @@ export function StaggerItem({
   }
 
   return (
-    <motion.div variants={itemVariants} className={className}>
+    <motion.div
+      initial={false}
+      variants={itemVariants}
+      className={className}
+    >
       {children}
     </motion.div>
   )

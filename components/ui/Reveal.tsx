@@ -8,6 +8,8 @@ interface RevealProps {
   className?: string
   delay?: number
   duration?: number
+  /** DIAGNOSTIC: when true, renders a plain div (no motion) to confirm Reveal is causing content to disappear */
+  noMotion?: boolean
 }
 
 export function Reveal({
@@ -15,6 +17,7 @@ export function Reveal({
   className,
   delay = 0,
   duration = 0.7,
+  noMotion = false,
 }: RevealProps) {
   const [hydrated, setHydrated] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
@@ -25,7 +28,7 @@ export function Reveal({
     setHydrated(true)
   }, [])
 
-  if (!hydrated || shouldReduceMotion) {
+  if (noMotion || !hydrated || shouldReduceMotion) {
     return (
       <div ref={ref} className={className}>
         {children}
@@ -37,17 +40,7 @@ export function Reveal({
     <motion.div
       ref={ref}
       initial={false}
-      animate={
-        isInView
-          ? {
-              opacity: 1,
-              y: 0,
-            }
-          : {
-              opacity: 0,
-              y: 12,
-            }
-      }
+      animate={isInView ? { opacity: 1, y: 0 } : undefined}
       transition={{
         duration,
         delay,

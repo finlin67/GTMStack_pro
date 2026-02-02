@@ -11,6 +11,7 @@ import EmailMarketingHero from '@/src/components/animations/EmailMarketingHero'
 import PipelineDashboard from '@/src/components/animations/PipelineDashboard'
 import QuantumDashboard from '@/src/components/animations/QuantumDashboard'
 import DemandGenFlow from '@/src/components/animations/DemandGenFlow'
+import DevMarketers from '@/src/components/animations/DevMarketers'
 
 export type HeroVisualMediaType = 'animation' | 'image'
 
@@ -89,6 +90,12 @@ export const HERO_VISUAL_REGISTRY: HeroVisualEntry[] = [
     title: 'Email Marketing',
     mediaType: 'animation',
     component: EmailMarketingHero,
+  },
+  {
+    route: '/industries/developer-tools',
+    title: 'Developer Tools & DevOps',
+    mediaType: 'animation',
+    component: DevMarketers,
   },
 ]
 

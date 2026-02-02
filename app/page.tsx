@@ -34,6 +34,9 @@ const pillarIcons = {
   'systems-operations': Settings,
 }
 
+/** DIAGNOSTIC: set to true to disable all Reveal/Stagger motion on home page and confirm animation is causing content to disappear */
+const DIAGNOSTIC_NO_MOTION = false
+
 const valueProps = [
   'Deep B2B SaaS expertise across 50+ engagements',
   'Data-driven approach with measurable outcomes',
@@ -57,7 +60,7 @@ export default function HomePage() {
       {/* ============================================
           SECTION 1: HERO
           ============================================ */}
-      <Reveal>
+      <Reveal noMotion={DIAGNOSTIC_NO_MOTION}>
       <HeroDark
           label="GTM Strategy for B2B Technology"
         title="Turn your go-to-market into a"
@@ -81,14 +84,14 @@ export default function HomePage() {
       {/* ============================================
           SECTION 2: PROBLEM → PROMISE
           ============================================ */}
-      <Reveal>
+      <Reveal noMotion={DIAGNOSTIC_NO_MOTION}>
         <ProblemPromise />
       </Reveal>
 
       {/* ============================================
           SECTION 3: SERVICES SNAPSHOT
           ============================================ */}
-      <Reveal>
+      <Reveal noMotion={DIAGNOSTIC_NO_MOTION}>
       <SectionLight variant="white" padding="lg">
         {/* Stacked planes motif - reduced opacity */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-40">
@@ -106,7 +109,7 @@ export default function HomePage() {
           />
 
           {/* 4 Pillars - Primary Grid */}
-          <StaggerContainer className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+          <StaggerContainer className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16" noMotion={DIAGNOSTIC_NO_MOTION}>
             {PILLARS.map((pillar, index) => {
               const Icon = pillarIcons[pillar.id as keyof typeof pillarIcons]
               return (
@@ -147,14 +150,14 @@ export default function HomePage() {
       {/* ============================================
           SECTION 4: PROOF & CREDIBILITY
           ============================================ */}
-      <Reveal>
+      <Reveal noMotion={DIAGNOSTIC_NO_MOTION}>
         <StatsSection stats={stats} />
       </Reveal>
 
       {/* ============================================
           SECTION 5: FEATURED CASE STUDIES
           ============================================ */}
-      <Reveal>
+      <Reveal noMotion={DIAGNOSTIC_NO_MOTION}>
         <SectionDark
           variant="theater"
           padding="lg"
@@ -200,7 +203,7 @@ export default function HomePage() {
           </div>
 
           <CardGrid columns={3}>
-            <StaggerContainer className="contents">
+            <StaggerContainer className="contents" noMotion={DIAGNOSTIC_NO_MOTION}>
             {featuredCaseStudies.map((study) => (
                 <StaggerItem key={study.slug}>
                   <CardGridItem>
@@ -252,7 +255,7 @@ export default function HomePage() {
       {/* ============================================
           SECTION 6: WHY WORK WITH GTMSTACK
           ============================================ */}
-      <Reveal>
+      <Reveal noMotion={DIAGNOSTIC_NO_MOTION}>
       <SectionLight variant="slate" padding="lg">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
           <div>
@@ -263,7 +266,7 @@ export default function HomePage() {
               className="mb-0"
             />
 
-            <StaggerContainer className="mt-8 space-y-6 relative">
+            <StaggerContainer className="mt-8 space-y-6 relative" noMotion={DIAGNOSTIC_NO_MOTION}>
               {valueProps.map((prop, index) => {
                 const iconGradient = index % 2 === 0 
                   ? 'from-brand-500 to-brand-600' 
@@ -412,7 +415,7 @@ export default function HomePage() {
       {/* ============================================
           SECTION 7: FINAL CTA
           ============================================ */}
-      <Reveal>
+      <Reveal noMotion={DIAGNOSTIC_NO_MOTION}>
         <SectionDark
           variant="cta"
           padding="lg"
@@ -490,7 +493,7 @@ export default function HomePage() {
             <p className="text-lg text-slate-300 mb-8">
               Let&apos;s discuss how to turn your go-to-market into a competitive advantage.
             </p>
-          <StaggerContainer className="flex flex-wrap items-center justify-center gap-4 relative">
+          <StaggerContainer className="flex flex-wrap items-center justify-center gap-4 relative" noMotion={DIAGNOSTIC_NO_MOTION}>
             <StaggerItem>
               <HoverScale>
               <Link
