@@ -1,9 +1,10 @@
 import { Metadata } from 'next'
 import React, { Suspense } from 'react'
-import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import { notFound } from 'next/navigation'
 import * as Icons from 'lucide-react'
 import { ArrowRight, CheckCircle2, Compass, Layers, LineChart, Sparkles } from 'lucide-react'
+import { MDXRemote } from 'next-mdx-remote/rsc'
 import { SectionHeader } from '@/components/layout/Section'
 import { SectionDark } from '@/components/layout/SectionDark'
 import { SectionLight } from '@/components/layout/SectionLight'
@@ -15,7 +16,8 @@ import { getCaseStudiesByExpertise } from '@/content/case-studies'
 import { PILLARS } from '@/lib/types'
 import { TopoBackdrop, PathwayOverlay, SignalField, StackedPlanes } from '@/components/motifs'
 import { getExpertiseHeroConfig } from '@/content/expertiseHeroConfigs'
-
+import { getExpertiseMdxContent } from '@/lib/expertiseMdx'
+import { expertiseMdxComponents } from '@/lib/ExpertiseMdxComponents'
 
 type IconName = keyof typeof Icons
 
@@ -88,6 +90,8 @@ export default function ExpertiseDetailPage({ params }: Props) {
     : []
   const relatedCaseStudies = getCaseStudiesByExpertise(item.slug).slice(0, 2)
 
+  const mdxContent = getExpertiseMdxContent(params.slug, item.pillar)
+
   const IconComponent = Icons[item.icon as IconName] as React.ComponentType<{ className?: string }>
   const itemDeliverables = deliverables[item.slug] || deliverables.default
 
@@ -137,6 +141,20 @@ export default function ExpertiseDetailPage({ params }: Props) {
         />
       </Suspense>
 
+      {mdxContent ? (
+        <>
+          {/* MDX body from content/expertise/{pillar}/{slug}.mdx */}
+          <SectionLight variant="white" className="overflow-hidden">
+            <div className="absolute inset-0 pointer-events-none opacity-10">
+              <TopoBackdrop intensity="subtle" variant="sparse" />
+            </div>
+            <div className="relative max-w-4xl mx-auto px-6 py-12 lg:py-16">
+              <MDXRemote source={mdxContent} components={expertiseMdxComponents} />
+            </div>
+          </SectionLight>
+        </>
+      ) : (
+        <>
       {/* Who this is for / Signals (Light) */}
       <SectionLight variant="white" className="overflow-hidden">
         <div className="absolute inset-0 pointer-events-none opacity-10">
@@ -311,6 +329,8 @@ export default function ExpertiseDetailPage({ params }: Props) {
           ))}
         </StaggerContainer>
       </SectionLight>
+        </>
+      )}
 
       {/* Related Case Studies */}
       {relatedCaseStudies.length > 0 && (
