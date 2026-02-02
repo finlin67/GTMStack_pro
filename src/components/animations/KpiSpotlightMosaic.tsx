@@ -157,7 +157,7 @@ const InsightModal = ({ isOpen, onClose, stats }: { isOpen: boolean; onClose: ()
               <button onClick={onClose} className="text-neutral-400 hover:text-white transition-colors"><X className="w-5 h-5" /></button>
             </div>
             <h2 className="font-impact text-3xl text-neutral-100 leading-none mb-4">PREDICTIVE TRAFFIC SURGE</h2>
-            <p className="text-sm text-neutral-300 mb-5 leading-relaxed font-mono">Anomaly detected: +{stats.trafficBoost}% traffic deviation correlated with "Summer Sale" campaign vectors.</p>
+            <p className="text-sm text-neutral-300 mb-5 leading-relaxed font-mono">Anomaly detected: +{stats.trafficBoost}% traffic deviation correlated with &ldquo;Summer Sale&rdquo; campaign vectors.</p>
             <div className="bg-card-blue p-3 border border-ice-blue/20 rounded-md mb-5">
               <div className="flex justify-between items-end mb-1">
                 <span className="text-[10px] font-bold uppercase tracking-widest text-ice-blue/80">Server Load Forecast</span>

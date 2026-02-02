@@ -24,7 +24,13 @@ import {
   Target,
   Zap
 } from 'lucide-react';
-import { GoogleGenAI } from "@google/genai";
+// @ts-ignore - Optional dependency, may not be installed
+let GoogleGenAI: any;
+try {
+  GoogleGenAI = require("@google/genai").GoogleGenAI;
+} catch {
+  GoogleGenAI = null;
+}
 
 // --- Types & Interfaces ---
 interface StatsState {
@@ -57,6 +63,11 @@ export default function EduMarketersDashboard() {
   // Gemini Strategy Generation Logic
   const generateStrategy = async () => {
     setIsGenerating(true);
+    if (!GoogleGenAI) {
+      setAiResult("AI features unavailable - package not installed.");
+      setIsGenerating(false);
+      return;
+    }
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const response = await ai.models.generateContent({

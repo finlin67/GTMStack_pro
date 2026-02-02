@@ -27,7 +27,13 @@ import {
   Facebook,
   MessageCircle
 } from 'lucide-react';
-import { GoogleGenAI } from "@google/genai";
+// @ts-ignore - Optional dependency, may not be installed
+let GoogleGenAI: any;
+try {
+  GoogleGenAI = require("@google/genai").GoogleGenAI;
+} catch {
+  GoogleGenAI = null;
+}
 
 /**
  * TYPES & INTERFACES
@@ -141,6 +147,10 @@ export default function MarketingFlowAI() {
     setIsGenerating(true);
     
     try {
+      if (!GoogleGenAI) {
+        setAiInsight("Leverage short-form video hooks on Instagram to drive high-intent traffic to your LinkedIn lead magnets.");
+        return;
+      }
       const platformNames = selectedPlatforms.map(p => PLATFORMS.find(pl => pl.id === p)?.name).join(', ');
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const response = await ai.models.generateContent({
@@ -341,7 +351,7 @@ export default function MarketingFlowAI() {
                     transition={{ duration: 0.6, ease: "easeOut" }}
                     className="text-xs text-indigo-100/80 leading-relaxed font-medium italic"
                   >
-                    "{aiInsight}"
+                    &ldquo;{aiInsight}&rdquo;
                   </motion.p>
                 )}
               </AnimatePresence>

@@ -6,7 +6,13 @@ import {
   Cpu, Zap, TrendingDown, ShieldCheck, Plane, 
   Package, Award, Loader2, Search, Binary 
 } from 'lucide-react';
-import { GoogleGenAI } from "@google/genai";
+// @ts-ignore - Optional dependency, may not be installed
+let GoogleGenAI: any;
+try {
+  GoogleGenAI = require("@google/genai").GoogleGenAI;
+} catch {
+  GoogleGenAI = null;
+}
 
 interface StatsState {
   duration: number;
@@ -57,6 +63,12 @@ export default function EngineeringWorkflow() {
     setAiLoading(true);
     setReport(null);
     setConceptImage(null);
+
+    if (!GoogleGenAI) {
+      setAiLoading(false);
+      setReport({ component: componentName, roadmap: ["AI features unavailable"], riskFactor: "Low" });
+      return;
+    }
 
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
     

@@ -24,7 +24,13 @@ import {
   Users,
   Box
 } from 'lucide-react';
-import { GoogleGenAI } from "@google/genai";
+// @ts-ignore - Optional dependency, may not be installed
+let GoogleGenAI: any;
+try {
+  GoogleGenAI = require("@google/genai").GoogleGenAI;
+} catch {
+  GoogleGenAI = null;
+}
 
 // --- Types ---
 interface Stats {
@@ -103,6 +109,11 @@ export default function NexusStakeholderPortal() {
     if (isGeneratingInsight) return;
     setIsGeneratingInsight(true);
     setAiInsight("Generating insight...");
+    if (!GoogleGenAI) {
+      setAiInsight("AI insights unavailable - package not installed.");
+      setIsGeneratingInsight(false);
+      return;
+    }
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const response = await ai.models.generateContent({

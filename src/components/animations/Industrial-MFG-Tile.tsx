@@ -15,6 +15,13 @@ import {
   Sparkles, 
   Zap 
 } from 'lucide-react';
+// @ts-ignore - Optional dependency, may not be installed
+let GoogleGenAI: any;
+try {
+  GoogleGenAI = require("@google/genai").GoogleGenAI;
+} catch {
+  GoogleGenAI = null;
+}
 
 // --- TYPES ---
 export type AppMode = 'OPERATIONAL' | 'MARKETING';
@@ -33,10 +40,12 @@ export interface TelemetryData {
 }
 
 // --- CONSTANTS & SERVICES ---
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
-
 const getFactoryInsights = async (data: TelemetryData) => {
+  if (!GoogleGenAI) {
+    return "AI insights unavailable - package not installed.";
+  }
   try {
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: `Analyze this factory engine telemetry data and provide a 2-sentence optimization insight:

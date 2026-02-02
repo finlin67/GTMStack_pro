@@ -8,7 +8,7 @@ import {
   Rocket, 
   Zap, 
   Star, 
-  CloudCheck, 
+  CheckCircle2 as CloudCheck, 
   Database, 
   Shield, 
   Cpu

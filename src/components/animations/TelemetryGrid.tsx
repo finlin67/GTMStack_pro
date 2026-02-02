@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { TelemetryData } from '../types';
+import { TelemetryData } from './Industrial-MFG-Tile';
 import { LineChart, Line, ResponsiveContainer, YAxis } from 'recharts';
 
 interface TelemetryGridProps {
