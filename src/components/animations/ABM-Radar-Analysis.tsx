@@ -1,20 +1,6 @@
-'use client';
-
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { LineChart, Line, ResponsiveContainer, YAxis } from 'recharts';
-import { motion, AnimatePresence } from "framer-motion";
-import { 
-  Activity, 
-  BadgeCheck, 
-  CheckCircle2, 
-  Cpu, 
-  Factory, 
-  FileEdit, 
-  Layers, 
-  Pencil, 
-  Sparkles, 
-  Zap 
-} from 'lucide-react';
+import { GoogleGenAI } from "@google/genai";
 
 // --- TYPES ---
 export type AppMode = 'OPERATIONAL' | 'MARKETING';
@@ -56,8 +42,7 @@ const getFactoryInsights = async (data: TelemetryData) => {
     return response.text;
   } catch (error) {
     console.error("Gemini Insight Error:", error);
-    // Re-throw the error so it can be handled by the component's UI logic
-    throw error;
+    return "Optimizing thermodynamic cycles for batch #4409. Systems running within nominal parameters.";
   }
 };
 
@@ -71,10 +56,7 @@ const TrendCard: React.FC<{
   color: string;
   stroke: string;
 }> = ({ label, value, unit, data, color, stroke }) => (
-  <motion.div 
-    whileHover={{ scale: 1.05 }}
-    className="glass-panel p-3 rounded-xl min-w-[160px] sm:min-w-[180px] overflow-hidden relative group backdrop-blur-md border border-white/10 bg-white/5"
-  >
+  <div className="glass-panel p-3 rounded-xl min-w-[180px] transition-transform hover:scale-105 overflow-hidden relative group backdrop-blur-md">
     <div className="flex justify-between items-start mb-1">
       <div>
         <p className={`text-[9px] font-bold ${color} opacity-80 uppercase tracking-wider`}>{label}</p>
@@ -103,17 +85,14 @@ const TrendCard: React.FC<{
       <div className={`w-1 h-1 rounded-full`} style={{ backgroundColor: stroke }}></div>
       <div className={`flex-1 h-[1px] bg-white/20`}></div>
     </div>
-  </motion.div>
+  </div>
 );
 
 const StatCard: React.FC<{ label: string; value: string }> = ({ label, value }) => (
-  <motion.div 
-    whileHover={{ scale: 1.05 }}
-    className="glass-panel p-2 rounded-lg min-w-[60px] border border-white/5 bg-white/5 flex flex-col justify-center"
-  >
+  <div className="glass-panel p-2 rounded-lg min-w-[60px] transition-transform hover:scale-105 border-white/5 flex flex-col justify-center">
     <p className="text-[7px] font-bold text-blue-200/60 uppercase mb-0.5 truncate tracking-wide">{label}</p>
     <p className="text-xs font-black text-white">{value}</p>
-  </motion.div>
+  </div>
 );
 
 const ProgressBarCard: React.FC<{ 
@@ -123,10 +102,7 @@ const ProgressBarCard: React.FC<{
   color: string; 
   borderColor: string;
 }> = ({ label, value, progress, color, borderColor }) => (
-  <motion.div 
-    whileHover={{ x: 4 }}
-    className={`glass-panel p-3 rounded-xl border-l-2 ${borderColor} bg-white/5 border-t border-r border-b border-white/10`}
-  >
+  <div className={`glass-panel p-3 rounded-xl border-l-2 ${borderColor} transition-all hover:translate-x-1`}>
     <div className="flex justify-between items-end gap-2">
         <div>
             <span className={`text-[8px] font-bold uppercase block mb-0.5 ${color.replace('bg-', 'text-')}`}>{label}</span>
@@ -134,14 +110,12 @@ const ProgressBarCard: React.FC<{
         </div>
     </div>
     <div className="w-24 h-1 bg-white/10 rounded-full mt-2 overflow-hidden">
-      <motion.div 
-        className={`h-full ${color}`} 
-        initial={{ width: 0 }}
-        animate={{ width: `${Math.min(100, progress)}%` }}
-        transition={{ duration: 1, ease: "easeOut" }}
-      />
+      <div 
+        className={`h-full ${color} transition-all duration-1000 ease-out`} 
+        style={{ width: `${Math.min(100, progress)}%` }}
+      ></div>
     </div>
-  </motion.div>
+  </div>
 );
 
 const TelemetryGrid: React.FC<{ 
@@ -222,11 +196,11 @@ const TelemetryGrid: React.FC<{
 };
 
 const Sidebar: React.FC<{ currentStage: ProcessStage; setStage: (stage: ProcessStage) => void }> = ({ currentStage, setStage }) => {
-  const STAGES: { id: ProcessStage; label: string; icon: React.ReactNode }[] = [
-    { id: 'DESIGN', label: 'Design', icon: <FileEdit size={14} /> },
-    { id: 'PROTO', label: 'Proto', icon: <Layers size={14} /> },
-    { id: 'PROD', label: 'Prod', icon: <Factory size={14} /> },
-    { id: 'QUALITY', label: 'Quality', icon: <BadgeCheck size={14} /> },
+  const STAGES: { id: ProcessStage; label: string; icon: string }[] = [
+    { id: 'DESIGN', label: 'Design', icon: 'edit_note' },
+    { id: 'PROTO', label: 'Proto', icon: 'layers' },
+    { id: 'PROD', label: 'Prod', icon: 'precision_manufacturing' },
+    { id: 'QUALITY', label: 'Quality', icon: 'verified' },
   ];
 
   return (
@@ -241,23 +215,22 @@ const Sidebar: React.FC<{ currentStage: ProcessStage; setStage: (stage: ProcessS
             onClick={() => setStage(stage.id)}
             className="relative flex items-center gap-3 group outline-none text-left"
           >
-            <motion.div 
-              layout
-              className={`w-8 h-8 rounded-full border flex items-center justify-center backdrop-blur-sm z-10 transition-colors duration-300 ${
+            <div 
+              className={`w-8 h-8 rounded-full border flex items-center justify-center backdrop-blur-sm z-10 transition-all duration-300 ${
                 isActive 
-                  ? 'bg-blue-400 border-white shadow-lg shadow-blue-500/50' 
+                  ? 'bg-blue-400 border-white shadow-lg shadow-blue-500/50 scale-110' 
                   : 'bg-white/10 border-white/20 hover:bg-white/20'
               }`}
             >
-              <div className={isActive ? 'text-indigo-900' : 'text-white'}>
+              <span className={`material-symbols-outlined text-sm ${isActive ? 'text-indigo-900 font-bold' : 'text-white'}`}>
                 {stage.icon}
-              </div>
-            </motion.div>
+              </span>
+            </div>
             <span className={`text-[10px] font-bold uppercase tracking-tighter transition-colors ${isActive ? 'text-white' : 'text-white/60 group-hover:text-white/80'}`}>
               {stage.label}
             </span>
             {isActive && (
-                <motion.div layoutId="active-glow" className="absolute -right-2 w-1 h-4 bg-white/40 rounded-full blur-sm" />
+                <div className="absolute -right-2 w-1 h-4 bg-white/40 rounded-full blur-sm"></div>
             )}
           </button>
         );
@@ -267,7 +240,7 @@ const Sidebar: React.FC<{ currentStage: ProcessStage; setStage: (stage: ProcessS
 };
 
 // --- MAIN APPLICATION COMPONENT ---
-export default function IndustrialMfgTile() {
+export default function App() {
   const [mode, setMode] = useState<AppMode>('OPERATIONAL');
   const [stage, setStage] = useState<ProcessStage>('PROD');
   
@@ -283,6 +256,7 @@ export default function IndustrialMfgTile() {
     torque: 450
   });
 
+  // Consolidated history state for all trend lines
   const [history, setHistory] = useState<{
     cycle: { time: number; value: number }[];
     pressure: { time: number; value: number }[];
@@ -295,10 +269,7 @@ export default function IndustrialMfgTile() {
     torque: []
   });
 
-  const [insight, setInsight] = useState<string>("Click 'Refresh AI Insights' to analyze telemetry.");
-  const [isFetchingInsights, setIsFetchingInsights] = useState(false);
-  const lastFetchTimestamp = useRef(0);
-  const COOLDOWN_PERIOD_MS = 10000; // 10 second cooldown
+  const [insight, setInsight] = useState<string>("Analyzing industrial patterns...");
   const historyCounter = useRef(0);
 
   // Simulation of live engine telemetry data
@@ -306,6 +277,7 @@ export default function IndustrialMfgTile() {
     const interval = setInterval(() => {
       const t = historyCounter.current++;
 
+      // Generate random fluctuations
       const nextCycleTime = Number((4.1 + Math.random() * 0.2).toFixed(2));
       const nextPressure = Math.floor(2350 + Math.random() * 100);
       const nextVibration = Number((1.0 + Math.random() * 1.5).toFixed(2));
@@ -337,38 +309,17 @@ export default function IndustrialMfgTile() {
   }, []);
 
   const fetchInsights = useCallback(async () => {
-    const now = Date.now();
-    if (isFetchingInsights) {
-      return;
-    }
+    const text = await getFactoryInsights(telemetry);
+    setInsight(text || "Optimal engine efficiency achieved.");
+  }, [telemetry]);
 
-    if (now - lastFetchTimestamp.current < COOLDOWN_PERIOD_MS) {
-      const timeLeft = Math.ceil((COOLDOWN_PERIOD_MS - (now - lastFetchTimestamp.current)) / 1000);
-      setInsight(`Please wait ${timeLeft}s to refresh insights.`);
-      return;
-    }
-
-    setIsFetchingInsights(true);
-    setInsight("Analyzing telemetry...");
-
-    try {
-      const text = await getFactoryInsights(telemetry);
-      setInsight(text || "Optimal engine efficiency achieved.");
-      lastFetchTimestamp.current = Date.now();
-    } catch (error: any) {
-      if (error.toString().includes('429')) {
-        setInsight("Rate limit reached. Please wait before refreshing.");
-      } else {
-        setInsight("Could not retrieve AI insight at this time.");
-      }
-    } finally {
-      setIsFetchingInsights(false);
-    }
-  }, [telemetry, isFetchingInsights]);
+  useEffect(() => {
+    fetchInsights();
+  }, []);
 
   return (
-    <div className="w-full h-full flex items-center justify-center bg-background-dark p-4 md:p-8">
-      <div className="w-full max-w-[640px] aspect-square max-h-[640px] overflow-hidden relative bg-gradient-to-br from-blue-700 via-indigo-700 to-violet-700 rounded-3xl shadow-[0_0_80px_rgba(0,0,0,0.5)] flex flex-col font-display ring-1 ring-white/10">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-background-dark">
+      <div className="w-full max-w-[640px] h-[640px] overflow-hidden relative bg-gradient-to-br from-blue-700 via-indigo-700 to-violet-700 rounded-3xl shadow-[0_0_80px_rgba(0,0,0,0.5)] flex flex-col font-display">
         
         {/* Top Switcher */}
         <div className="absolute top-6 left-1/2 -translate-x-1/2 z-30">
@@ -401,39 +352,25 @@ export default function IndustrialMfgTile() {
           <div className="flex-1 relative flex items-center justify-center">
             {/* Background Wireframe Decorator */}
             <div className="absolute inset-0 flex items-center justify-center opacity-20 pointer-events-none">
-              <motion.svg 
-                className="w-[300px] h-[300px]"
-                viewBox="0 0 100 100"
-                animate={{ rotate: 360 }}
-                transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-              >
-                 <rect fill="none" height="80" stroke="white" strokeWidth="0.5" width="80" x="10" y="10" strokeDasharray="4" />
-                 <circle cx="50" cy="50" fill="none" r="30" stroke="white" strokeWidth="0.5" strokeDasharray="2" />
-                 <path d="M10 50 L90 50 M50 10 L50 90" stroke="white" strokeWidth="0.5" strokeDasharray="1" />
-              </motion.svg>
+              <svg className="wireframe-stroke animate-spin-slow" height="300" viewBox="0 0 100 100" width="300">
+                <rect fill="none" height="80" stroke="white" stroke-width="0.5" width="80" x="10" y="10" strokeDasharray="4"></rect>
+                <circle cx="50" cy="50" fill="none" r="30" stroke="white" stroke-width="0.5" strokeDasharray="2"></circle>
+                <path d="M10 50 L90 50 M50 10 L50 90" stroke="white" stroke-width="0.5" strokeDasharray="1"></path>
+              </svg>
             </div>
 
             <div className="relative z-10 flex flex-col items-center mb-12">
-              <div className="w-48 h-48 rounded-[2.5rem] glass-panel flex items-center justify-center relative group backdrop-blur-md bg-white/5 border border-white/10">
+              <div className="w-48 h-48 rounded-[2.5rem] glass-panel flex items-center justify-center relative group">
                 <div className="absolute inset-0 bg-blue-500/10 rounded-[2.5rem] blur-xl group-hover:bg-blue-500/20 transition-all duration-700"></div>
                 
                 {/* Dynamic Stage Icon */}
-                <motion.div
-                    key={stage}
-                    initial={{ scale: 0.8, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ type: "spring", stiffness: 200 }}
-                    className="text-white opacity-90 group-hover:scale-110 transition-transform duration-500"
-                >
-                    {stage === 'PROD' ? <Factory size={72} strokeWidth={1} /> : 
-                     stage === 'DESIGN' ? <Pencil size={72} strokeWidth={1} /> : 
-                     stage === 'PROTO' ? <Cpu size={72} strokeWidth={1} /> : 
-                     <BadgeCheck size={72} strokeWidth={1} />}
-                </motion.div>
+                <span className="material-symbols-outlined text-7xl text-white opacity-90 transition-transform group-hover:scale-110 duration-500">
+                  {stage === 'PROD' ? 'precision_manufacturing' : stage === 'DESIGN' ? 'edit' : stage === 'PROTO' ? 'token' : 'verified'}
+                </span>
 
                 {/* Status Indicator */}
-                <div className="absolute -top-4 -right-4 w-12 h-12 rounded-2xl bg-green-400 flex items-center justify-center shadow-lg border-4 border-indigo-700 animate-bounce">
-                  <CheckCircle2 className="text-indigo-900" size={24} strokeWidth={3} />
+                <div className="absolute -top-4 -right-4 w-12 h-12 rounded-2xl bg-green-400 flex items-center justify-center shadow-lg border-4 border-indigo-700 animate-bounce transition-all">
+                  <span className="material-symbols-outlined text-indigo-900 font-bold text-2xl">check_circle</span>
                 </div>
               </div>
 
@@ -446,7 +383,7 @@ export default function IndustrialMfgTile() {
                 </p>
                 
                 {/* Gemini-Powered Insights Display */}
-                <div className="mt-4 px-6 py-2 glass-panel bg-white/5 border border-white/10 rounded-full max-w-xs mx-auto min-h-[40px] flex items-center justify-center backdrop-blur-md">
+                <div className="mt-4 px-6 py-2 glass-panel rounded-full max-w-xs mx-auto min-h-[40px] flex items-center justify-center">
                     <p className="text-[10px] italic text-blue-100/90 leading-tight">
                         {insight}
                     </p>
@@ -463,7 +400,7 @@ export default function IndustrialMfgTile() {
         <div className="absolute bottom-0 left-0 right-0 h-1 w-full bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
         <div className="px-8 py-5 bg-black/20 flex justify-between items-center backdrop-blur-xl border-t border-white/5">
           <div className="flex items-center gap-3">
-            <Activity className="text-blue-400 animate-pulse" size={14} />
+            <span className="material-symbols-outlined text-blue-400 text-sm animate-pulse">analytics</span>
             <span className="text-[10px] font-extrabold text-white/50 uppercase tracking-[0.3em]">Nexus Real-time Telemetry</span>
           </div>
           <div className="flex items-center gap-2">
@@ -475,27 +412,13 @@ export default function IndustrialMfgTile() {
       </div>
       
       {/* External Action Controls */}
-      <div className="fixed bottom-8 flex gap-4 z-50">
+      <div className="mt-8 flex gap-4">
         <button 
             onClick={fetchInsights}
-            disabled={isFetchingInsights}
-            className="px-6 py-2 rounded-full bg-white/10 border border-white/20 hover:bg-white/20 transition-all text-xs font-bold uppercase tracking-widest flex items-center gap-2 text-white backdrop-blur-md shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-6 py-2 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors text-xs font-bold uppercase tracking-widest flex items-center gap-2 text-white"
         >
-          {isFetchingInsights ? (
-            <>
-              <motion.div 
-                className="w-3.5 h-3.5 border-2 border-t-transparent border-white rounded-full"
-                animate={{ rotate: 360 }}
-                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-              />
-              Analyzing...
-            </>
-          ) : (
-            <>
-              <Sparkles size={14} />
-              Refresh AI Insights
-            </>
-          )}
+            <span className="material-symbols-outlined text-sm">auto_awesome</span>
+            Refresh AI Insights
         </button>
       </div>
     </div>

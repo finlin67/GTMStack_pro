@@ -1,14 +1,25 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { TrendingUp, Target, Zap, Database, BarChart3 } from 'lucide-react';
 
+interface Particle {
+  id: number;
+  x: number;
+  y: number;
+  size: number;
+  speedX: number;
+  speedY: number;
+  opacity: number;
+}
+
 const GTMStackHero = () => {
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
-  const [particles, setParticles] = useState([]);
-  const canvasRef = useRef(null);
+  const [particles, setParticles] = useState<Particle[]>([]);
+  const canvasRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    const handleMouseMove = (e) => {
-      const rect = e.currentTarget.getBoundingClientRect();
+    const handleMouseMove = (e: MouseEvent) => {
+      const el = e.currentTarget as HTMLDivElement;
+      const rect = el.getBoundingClientRect();
       setMousePos({
         x: e.clientX - rect.left,
         y: e.clientY - rect.top

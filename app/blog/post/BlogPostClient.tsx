@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { fetchPostBySlug, WPPost } from "@/lib/wp-client";
 
@@ -55,10 +56,13 @@ export default function BlogPostClient() {
           />
 
           {featured?.source_url && (
-            <img
+            <Image
               src={featured.source_url}
               alt={featured.alt_text || ""}
               className="mt-6 w-full rounded-lg"
+              width={800}
+              height={450}
+              unoptimized
             />
           )}
 
