@@ -1,11 +1,22 @@
 'use client'
 
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { motion, useInView, useMotionValue, useReducedMotion, useSpring } from 'framer-motion'
 import * as Icons from 'lucide-react'
 import { AnimatedStatCard } from '@/components/ui/AnimatedStatCard'
 import { SectionDark } from '@/components/layout/SectionDark'
 import { DriftingSignalField } from '@/components/ui/DriftingSignalField'
+
+/** Jitter stat value slightly (e.g. "50+" → "51+") — adapted from EnterpriseSalesMotionDashboard live metrics */
+function jitterStatValue(value: string, amount = 0.03): string {
+  const match = value.match(/^([^0-9.-]*)([0-9.,]+)(.*)$/)
+  if (!match) return value
+  const [, prefix = '', numStr, suffix = ''] = match
+  const num = parseFloat(numStr.replace(/,/g, ''))
+  const jittered = num + (Math.random() - 0.5) * 2 * amount * Math.max(num, 1)
+  const rounded = Math.round(Math.max(jittered, 0))
+  return `${prefix}${rounded}${suffix}`
+}
 
 interface StatItem {
   value: string
@@ -66,6 +77,33 @@ function StatValue({ value, active }: { value: string; active: boolean }) {
 export function StatsSection({ stats }: StatsSectionProps) {
   const ref = useRef<HTMLDivElement>(null)
   const isInView = useInView(ref, { once: true, margin: '-10% 0px' })
+  const shouldReduceMotion = useReducedMotion() ?? false
+  const [jitteredValues, setJitteredValues] = useState<string[]>(() => stats.map((s) => s.value))
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const updateWithJitter = useCallback(() => {
+    if (shouldReduceMotion) return
+    setJitteredValues((prev) =>
+      stats.map((s, i) => jitterStatValue(prev[i] ?? s.value))
+    )
+    timerRef.current = setTimeout(
+      updateWithJitter,
+      2000 + Math.random() * 3000
+    )
+  }, [stats, shouldReduceMotion])
+
+  useEffect(() => {
+    if (!isInView || shouldReduceMotion) return
+    updateWithJitter()
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current)
+    }
+  }, [isInView, updateWithJitter, shouldReduceMotion])
+
+  const displayStats = stats.map((s, i) => ({
+    ...s,
+    value: shouldReduceMotion ? s.value : (jitteredValues[i] ?? s.value),
+  }))
 
   return (
     <div ref={ref}>
@@ -88,7 +126,7 @@ export function StatsSection({ stats }: StatsSectionProps) {
           animate={isInView ? 'visible' : 'hidden'}
           className="relative z-10 grid md:grid-cols-2 lg:grid-cols-4 gap-7 mb-14"
         >
-          {stats.map((stat, index) => {
+          {displayStats.map((stat, index) => {
             const IconComponent = (Icons[stat.icon as keyof typeof Icons] ||
               Icons.Activity) as React.ComponentType<{ className?: string }>
             const maxValue = Math.max(...stat.sparkline)

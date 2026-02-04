@@ -6,7 +6,8 @@ import React from 'react'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { ArrowRight } from 'lucide-react'
+import { ArrowRight, Rocket, Zap, BarChart3 } from 'lucide-react'
+import { motion, useReducedMotion } from 'framer-motion'
 import { FadeIn, HoverScale, StaggerContainer, StaggerItem } from '@/components/motion/FadeIn'
 import { cn } from '@/lib/utils'
 import { TopoBackdrop, PathwayOverlay, SignalField } from '@/components/motifs'
@@ -16,6 +17,7 @@ import { heroVisualFallbacks, heroVisualMap } from '@/lib/hero-visual-map'
 import { heroOverlayMap } from '@/lib/hero-overlay-map'
 import { heroVisualPresets } from '@/lib/hero-visual-presets'
 import { HeroBackground, type HeroBackgroundVariant, type HeroBackgroundIntensity } from '@/components/ui/HeroBackground'
+import { HeroParticleOverlay } from '@/components/ui/HeroParticleOverlay'
 import { getHeroBackgroundVariant } from '@/lib/heroPresets'
 
 function getDefaultIntensity(pathname: string): HeroBackgroundIntensity {
@@ -51,6 +53,9 @@ interface HeroDarkProps {
   motif?: 'topo' | 'pathway' | 'signal' | 'grid' | 'none' | 'flow'
   rightVisual?: React.ReactNode | HeroVisualType
   backgroundVariant?: HeroBackgroundVariant
+  particleOverlay?: boolean
+  titleGlow?: boolean
+  orbitingIcons?: boolean
   backgroundIntensity?: HeroBackgroundIntensity
   slug?: string
   kind?: 'expertise' | 'industries' | 'projects'
@@ -73,8 +78,12 @@ export function HeroDark({
   rightVisual,
   slug,
   kind,
+  particleOverlay = false,
+  titleGlow = false,
+  orbitingIcons = false,
 }: HeroDarkProps) {
   const isLarge = size === 'large'
+  const shouldReduceMotion = useReducedMotion() ?? false
   const isCentered = align === 'center'
   const pathname = usePathname() ?? (slug ? `/${kind ?? 'expertise'}/${slug}` : '/')
 
@@ -169,6 +178,7 @@ export function HeroDark({
         </div>
       )}
       <HeroBackground variant={resolvedBackgroundVariant} intensity={resolvedIntensity} seed={pathname} />
+      {particleOverlay && <HeroParticleOverlay />}
 
       {/* Ambient gradient orbs with drift */}
       <div className="absolute z-0 top-0 left-1/4 w-[600px] h-[600px] bg-brand-500/20 rounded-full blur-3xl animate-drift-slow pointer-events-none" />
@@ -204,25 +214,35 @@ export function HeroDark({
             )}
 
             <StaggerItem>
-              <h1
-                className={cn(
-                  'font-display font-bold tracking-tight text-white text-balance',
-                  isLarge
-                    ? 'text-4xl md:text-5xl lg:text-6xl xl:text-7xl'
-                    : 'text-3xl md:text-4xl lg:text-5xl',
-                  'leading-tight'
+              <div className="relative inline-block">
+                {titleGlow && !shouldReduceMotion && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 0.5 }}
+                    transition={{ duration: 1, ease: [0.25, 1, 0.3, 1] }}
+                    className="absolute -inset-8 -z-10 rounded-2xl bg-gradient-to-r from-cyan-500/20 via-brand-500/15 to-cool-500/20 blur-2xl"
+                  />
                 )}
-              >
-                {title}
-                {titleHighlight && (
-                  <>
-                    {' '}
-                    <span className="bg-gradient-to-r from-brand-400 via-cool-400 to-cyan-400 bg-clip-text text-transparent">
-                      {titleHighlight}
-                    </span>
-                  </>
-                )}
-              </h1>
+                <h1
+                  className={cn(
+                    'relative font-display font-bold tracking-tight text-white text-balance',
+                    isLarge
+                      ? 'text-4xl md:text-5xl lg:text-6xl xl:text-7xl'
+                      : 'text-3xl md:text-4xl lg:text-5xl',
+                    'leading-tight'
+                  )}
+                >
+                  {title}
+                  {titleHighlight && (
+                    <>
+                      {' '}
+                      <span className="bg-gradient-to-r from-brand-400 via-cool-400 to-cyan-400 bg-clip-text text-transparent">
+                        {titleHighlight}
+                      </span>
+                    </>
+                  )}
+                </h1>
+              </div>
             </StaggerItem>
 
             <StaggerItem>
@@ -239,38 +259,57 @@ export function HeroDark({
 
             {(primaryCta || secondaryCta) && (
               <StaggerItem>
-                <StaggerContainer
-                  className={cn(
-                    'mt-8 flex flex-wrap gap-4',
-                    isCentered && !hasRightVisual && 'justify-center'
+                <div className="relative mt-8">
+                  {orbitingIcons && !shouldReduceMotion && (
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 60, repeat: Infinity, ease: 'linear' }}
+                      className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 pointer-events-none"
+                    >
+                      <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-brand-500/20 border border-brand-400/30 flex items-center justify-center">
+                        <Rocket className="w-4 h-4 text-cyan-400/80" />
+                      </div>
+                      <div className="absolute top-1/2 -right-2 -translate-y-1/2 w-7 h-7 rounded-full bg-cool-500/15 border border-cool-400/25 flex items-center justify-center">
+                        <Zap className="w-3.5 h-3.5 text-cool-300/70" />
+                      </div>
+                      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-7 h-7 rounded-full bg-cyan-500/15 border border-cyan-400/25 flex items-center justify-center">
+                        <BarChart3 className="w-3.5 h-3.5 text-cyan-300/70" />
+                      </div>
+                    </motion.div>
                   )}
-                >
-                  {primaryCta && (
-                    <StaggerItem>
-                      <HoverScale scale={1.01}>
-                        <Link
-                          href={primaryCta.href}
-                          className="btn bg-brand-500 text-white hover:bg-brand-400 px-6 py-3 text-base rounded-xl group shadow-glow transition-all duration-300 hover:shadow-glow-violet"
-                        >
-                          {primaryCta.label}
-                          <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-                        </Link>
-                      </HoverScale>
-                    </StaggerItem>
-                  )}
-                  {secondaryCta && (
-                    <StaggerItem>
-                      <HoverScale scale={1.01}>
-                        <Link
-                          href={secondaryCta.href}
-                          className="btn bg-white/10 text-white border border-white/20 hover:bg-white/20 px-6 py-3 text-base rounded-xl backdrop-blur-sm transition-all duration-300"
-                        >
-                          {secondaryCta.label}
-                        </Link>
-                      </HoverScale>
-                    </StaggerItem>
-                  )}
-                </StaggerContainer>
+                  <StaggerContainer
+                    className={cn(
+                      'relative flex flex-wrap gap-4',
+                      isCentered && !hasRightVisual && 'justify-center'
+                    )}
+                  >
+                    {primaryCta && (
+                      <StaggerItem>
+                        <HoverScale scale={1.01}>
+                          <Link
+                            href={primaryCta.href}
+                            className="btn bg-brand-500 text-white hover:bg-brand-400 px-6 py-3 text-base rounded-xl group shadow-glow transition-all duration-300 hover:shadow-glow-violet"
+                          >
+                            {primaryCta.label}
+                            <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                          </Link>
+                        </HoverScale>
+                      </StaggerItem>
+                    )}
+                    {secondaryCta && (
+                      <StaggerItem>
+                        <HoverScale scale={1.01}>
+                          <Link
+                            href={secondaryCta.href}
+                            className="btn bg-white/10 text-white border border-white/20 hover:bg-white/20 px-6 py-3 text-base rounded-xl backdrop-blur-sm transition-all duration-300"
+                          >
+                            {secondaryCta.label}
+                          </Link>
+                        </HoverScale>
+                      </StaggerItem>
+                    )}
+                  </StaggerContainer>
+                </div>
               </StaggerItem>
             )}
 

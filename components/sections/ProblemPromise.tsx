@@ -1,10 +1,10 @@
 'use client'
 
 import React, { useRef } from 'react'
-import Image from 'next/image'
 import { motion, useInView, useReducedMotion } from 'framer-motion'
 import { SectionDark } from '@/components/layout/SectionDark'
 import { FadeIn, StaggerContainer, StaggerItem } from '@/components/motion/FadeIn'
+import { TimelineTeaser } from '@/components/sections/TimelineTeaser'
 import { cn } from '@/lib/utils'
 
 interface ProblemPromiseProps {
@@ -132,6 +132,11 @@ export default function ProblemPromise({ className }: ProblemPromiseProps) {
             transition={{ delay: shouldReduceMotion ? 0 : 0.6, duration: 0.4, ease: [0.25, 1, 0.3, 1] }}
           />
         </motion.svg>
+      </div>
+
+      {/* Timeline teaser strip — full-width horizontal auto-scroll with pause on hover */}
+      <div className="relative z-10 mt-12 w-full border-t border-white/5">
+        <TimelineTeaser />
       </div>
     </SectionDark>
   )

@@ -1,535 +1,397 @@
+'use client'
+
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
-import { ArrowRight, Target, BarChart3, Workflow, TrendingUp, CheckCircle2, Building2, DollarSign, Calendar, Minus, Plus, FileText, Settings } from 'lucide-react'
-import { HeroDark } from '@/components/ui/HeroDark'
-import { HERO_VISUALS, type HeroVisual } from '@/lib/heroVisuals'
-import ProblemPromise from '@/components/sections/ProblemPromise'
-import { SectionDark } from '@/components/layout/SectionDark'
-import { SectionLight } from '@/components/layout/SectionLight'
-import { SectionHeader } from '@/components/layout/Section'
-import { CardGrid, CardGridItem } from '@/components/ui/CardGrid'
+import dynamic from 'next/dynamic'
+import { motion, useInView, useReducedMotion } from 'framer-motion'
 import {
-  HoverScale,
-  StaggerContainer,
-  StaggerItem,
-} from '@/components/motion/FadeIn'
-import { Reveal } from '@/components/ui/Reveal'
-import { SignalField, StackedPlanes } from '@/components/motifs'
-import { PILLARS } from '@/lib/types'
-import { getFeaturedCaseStudies } from '@/content/case-studies'
-import { StatsSection } from '@/components/sections/StatsSection'
+  ArrowRight,
+  Zap,
+  Target,
+  BarChart3,
+  Layers,
+  Cpu,
+  Rocket,
+  TrendingUp,
+  Workflow,
+  DollarSign,
+  ChevronRight,
+} from 'lucide-react'
 import { getHeroVisualForPath } from '@/lib/heroVisualRegistry'
 
-const stats = [
-  { value: '50+', label: 'B2B Companies', description: 'Helped scale', icon: 'Building2', sparkline: [20, 35, 28, 45, 38, 50] },
-  { value: '$500M+', label: 'Pipeline Generated', description: 'Across clients', icon: 'DollarSign', sparkline: [100, 200, 180, 300, 350, 400, 500] },
-  { value: '47%', label: 'Avg. Growth', description: 'MRR increase', icon: 'TrendingUp', sparkline: [10, 20, 25, 30, 35, 40, 47] },
-  { value: '12+', label: 'Years', description: 'GTM experience', icon: 'Calendar', sparkline: [2, 4, 6, 8, 10, 12] },
-]
+/* Preserved: Animated dashboard element in hero upper right — do not delete or modify */
+const HeroDashboardVisual = dynamic(
+  () =>
+    import('@/lib/heroVisualRegistry').then((mod) => {
+      const entry = mod.getHeroVisualForPath('/')
+      if (entry?.mediaType === 'animation' && entry.component) {
+        const C = entry.component
+        return { default: () => <C /> }
+      }
+      return import('@/components/ui/HeroVisual').then((m) => ({
+        default: () => <m.HeroVisual variant="signatureConstellation" />,
+      }))
+    }),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="absolute inset-0 rounded-2xl bg-[#0A0F2D]/80 animate-pulse flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-[#00A8A8]/40 border-t-[#00A8A8] rounded-full animate-spin" />
+      </div>
+    ),
+  }
+)
 
-const pillarIcons = {
-  'content-engagement': FileText,
-  'demand-growth': TrendingUp,
-  'strategy-insights': Target,
-  'systems-operations': Settings,
+const pathVariants = {
+  initial: { pathLength: 0, opacity: 0 },
+  animate: {
+    pathLength: [0, 1, 1],
+    opacity: [0, 0.18, 0.08],
+    transition: {
+      duration: 4,
+      repeat: Infinity,
+      ease: 'easeInOut' as const,
+      times: [0, 0.5, 1] as [number, number, number],
+    },
+  },
 }
 
-/** DIAGNOSTIC: set to true to disable all Reveal/Stagger motion on home page and confirm animation is causing content to disappear */
-const DIAGNOSTIC_NO_MOTION = false
+function HeroPulseBackground() {
+  const reduced = useReducedMotion() ?? false
+  if (reduced) return null
+  return (
+    <div className="pointer-events-none absolute inset-0 z-0 opacity-70">
+      <svg viewBox="0 0 1200 800" className="h-full w-full" preserveAspectRatio="xMidYMid slice">
+        <defs>
+          <linearGradient id="tealGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#00A8A8" stopOpacity="0.5" />
+            <stop offset="50%" stopColor="#22d3ee" stopOpacity="0.6" />
+            <stop offset="100%" stopColor="#06b6d4" stopOpacity="0.4" />
+          </linearGradient>
+        </defs>
+        <g stroke="url(#tealGrad)" strokeWidth="0.9" fill="none" strokeLinecap="round">
+          <motion.path
+            d="M 0 180 C 220 160, 450 200, 700 180 C 950 160, 1100 200, 1200 180"
+            variants={pathVariants}
+            initial="initial"
+            animate="animate"
+          />
+          <motion.path
+            d="M 0 400 C 280 370, 520 430, 800 400 C 1000 380, 1150 420, 1200 400"
+            variants={pathVariants}
+            initial="initial"
+            animate="animate"
+            transition={{ ...pathVariants.animate.transition, delay: 0.7 }}
+          />
+          <motion.path
+            d="M 0 620 C 300 590, 600 650, 900 620 C 1080 590, 1180 640, 1200 620"
+            variants={pathVariants}
+            initial="initial"
+            animate="animate"
+            transition={{ ...pathVariants.animate.transition, delay: 1.4 }}
+          />
+        </g>
+      </svg>
+    </div>
+  )
+}
 
-const valueProps = [
-  'Deep B2B SaaS expertise across 50+ engagements',
-  'Data-driven approach with measurable outcomes',
-  'End-to-end execution, not just strategy decks',
-  'Integrated thinking across the full GTM stack',
+function jitterStatValue(value: string, amount = 0.025): string {
+  const match = value.match(/^([^0-9.-]*)([0-9.,]+)(.*)$/)
+  if (!match) return value
+  const [, prefix = '', numStr, suffix = ''] = match
+  const num = parseFloat(numStr.replace(/,/g, ''))
+  const jittered = num + (Math.random() - 0.5) * 2 * amount * Math.max(num, 1)
+  const rounded = numStr.includes('.') ? parseFloat(jittered.toFixed(1)) : Math.round(Math.max(jittered, 0))
+  return `${prefix}${String(rounded)}${suffix}`
+}
+
+const STATS = [
+  { value: '$45M+', label: 'Pipeline Generated', icon: DollarSign },
+  { value: '87%', label: 'YoY Growth', icon: TrendingUp },
+  { value: '340%', label: 'Engagement Lift', icon: Zap },
+  { value: '2.5x', label: 'Deal Velocity', icon: Rocket },
+  { value: '98.1%', label: 'Success Rate on Routed Leads', icon: Target },
+]
+
+const VALUE_CARDS = [
+  {
+    icon: Workflow,
+    title: 'Unified ABM + RevOps Engine',
+    copy: 'Break silos, automate routing, close attribution gaps. See 126% pipeline increases.',
+    href: '/expertise',
+  },
+  {
+    icon: Target,
+    title: 'Intent-Driven Prioritization',
+    copy: 'Focus sales on in-market accounts. Generate 74 SQLs from high-intent signals.',
+    href: '/expertise',
+  },
+  {
+    icon: BarChart3,
+    title: 'Scalable Content & Demand',
+    copy: 'From 500% SEO growth to 571% lead surges — we build engines that compound.',
+    href: '/expertise',
+  },
+  {
+    icon: Cpu,
+    title: 'Enterprise-Grade Execution',
+    copy: 'MarTech optimization, AI automation, sales enablement — 2–3x faster workflows.',
+    href: '/expertise',
+  },
+]
+
+const TIMELINE_ITEMS = [
+  { year: '2024', title: 'GTMStack Pro Launch', tag: 'Founder' },
+  { year: '2019', title: 'VP Growth · $45M ARR', tag: 'Series C' },
+  { year: '2016', title: 'Director Demand Gen', tag: 'Enterprise' },
+  { year: '2012', title: 'Early Growth Roles', tag: 'Startups' },
 ]
 
 export default function HomePage() {
-  const featuredCaseStudies = getFeaturedCaseStudies().slice(0, 3)
+  const heroRef = useRef<HTMLDivElement>(null)
+  const statsRef = useRef<HTMLDivElement>(null)
+  const isStatsInView = useInView(statsRef, { once: true, margin: '-10% 0px' })
+  const shouldReduceMotion = useReducedMotion() ?? false
 
-  const homeHeroEntry = getHeroVisualForPath('/')
-  let homeRightVisual: React.ReactNode | HeroVisual = { variant: 'signatureConstellation' }
+  const [statValues, setStatValues] = useState(STATS.map((s) => s.value))
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const updateJitter = useCallback(() => {
+    if (shouldReduceMotion) return
+    setStatValues((prev) => STATS.map((s, i) => jitterStatValue(prev[i] ?? s.value)))
+    timerRef.current = setTimeout(updateJitter, 2200 + Math.random() * 2500)
+  }, [shouldReduceMotion])
 
-  if (homeHeroEntry?.mediaType === 'animation' && homeHeroEntry.component) {
-    const HomeVisual = homeHeroEntry.component
-    homeRightVisual = <HomeVisual />
-  }
+  useEffect(() => {
+    if (!isStatsInView || shouldReduceMotion) return
+    updateJitter()
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current)
+    }
+  }, [isStatsInView, updateJitter, shouldReduceMotion])
+
+  const [timelineFilter, setTimelineFilter] = useState<'all' | 'industry' | 'expertise'>('all')
+  const timelineScrollRef = useRef<HTMLDivElement>(null)
 
   return (
-    <>
-      {/* ============================================
-          SECTION 1: HERO
-          ============================================ */}
-      <Reveal noMotion={DIAGNOSTIC_NO_MOTION}>
-      <HeroDark
-          label="GTM Strategy for B2B Technology"
-        title="Turn your go-to-market into a"
-        titleHighlight="growth engine"
-          description="Strategic GTM consulting that bridges the gap between strategy and execution. Building scalable systems that drive predictable, measurable growth."
-        size="large"
-          motif="topo"
-          primaryCta={{
-            label: 'Get Started',
-            href: '/contact',
-          }}
-          secondaryCta={{
-            label: 'View Expertise',
-            href: '/expertise',
-          }}
-          rightVisual={homeRightVisual}
-      />
-      </Reveal>
-
-      <div className="h-px bg-gradient-to-r from-transparent via-slate-700/50 to-transparent" />
-      {/* ============================================
-          SECTION 2: PROBLEM → PROMISE
-          ============================================ */}
-      <Reveal noMotion={DIAGNOSTIC_NO_MOTION}>
-        <ProblemPromise />
-      </Reveal>
-
-      {/* ============================================
-          SECTION 3: SERVICES SNAPSHOT
-          ============================================ */}
-      <Reveal noMotion={DIAGNOSTIC_NO_MOTION}>
-      <SectionLight variant="white" padding="lg">
-        {/* Stacked planes motif - reduced opacity */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-40">
-          <StackedPlanes intensity="subtle" orientation="diagonal" layers={4} />
-        </div>
-
-        <div className="relative z-10">
-          {/* Header - unified with SectionHeader */}
-          <SectionHeader
-            label="Services"
-            title="Full-stack GTM capabilities"
-            description="Four interconnected pillars plus specialized modules across the complete go-to-market journey."
-            align="center"
-            className="mb-16"
-          />
-
-          {/* 4 Pillars - Primary Grid */}
-          <StaggerContainer className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16" noMotion={DIAGNOSTIC_NO_MOTION}>
-            {PILLARS.map((pillar, index) => {
-              const Icon = pillarIcons[pillar.id as keyof typeof pillarIcons]
-              return (
-                <StaggerItem key={pillar.id}>
-                  <Link href={pillar.href} className="group block h-full">
-                    <div className="relative h-full p-7 rounded-2xl bg-white border border-slate-200 shadow-sm transition-all duration-300 group-hover:border-brand-400/50 group-hover:shadow-glow-violet group-hover:-translate-y-1">
-                      {/* Subtle accent glaze on hover */}
-                      <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-cool-400/0 via-cool-400/0 to-cyan-400/0 group-hover:from-cool-400/3 group-hover:via-cool-400/2 group-hover:to-cyan-400/3 transition-all duration-300 opacity-0 group-hover:opacity-100" />
-                      
-                      <div className="relative z-10 flex flex-col h-full">
-                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center text-white mb-4 shadow-md transition-all duration-300 group-hover:scale-110 group-hover:from-brand-500 group-hover:to-cool-400">
-                          <Icon className="w-7 h-7 transition-all duration-300" />
-                        </div>
-                        <h3 className="font-semibold text-lg text-slate-900 mb-2 group-hover:text-brand-600 transition-colors">
-                          {pillar.title}
-                        </h3>
-                        <p className="text-sm text-slate-600 leading-relaxed flex-grow mb-4">
-                          {pillar.description}
-                        </p>
-                        <div className="pt-4 border-t border-slate-100">
-                          <span className="inline-flex items-center gap-2 text-sm font-semibold text-brand-600 group-hover:text-brand-700 transition-colors">
-                            Explore pillar
-                            <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </Link>
-                </StaggerItem>
-              )
-            })}
-          </StaggerContainer>
-
-        </div>
-      </SectionLight>
-      </Reveal>
-
-      {/* ============================================
-          SECTION 4: PROOF & CREDIBILITY
-          ============================================ */}
-      <Reveal noMotion={DIAGNOSTIC_NO_MOTION}>
-        <StatsSection stats={stats} />
-      </Reveal>
-
-      {/* ============================================
-          SECTION 5: FEATURED CASE STUDIES
-          ============================================ */}
-      <Reveal noMotion={DIAGNOSTIC_NO_MOTION}>
-        <SectionDark
-          variant="theater"
-          padding="lg"
-          motif="pathway"
-          accentOrb
-          className="bg-gradient-to-b from-slate-950 via-slate-950 to-brand-950"
-        >
-        {/* Soft data-constellation background - reduced opacity */}
-        <div className="absolute inset-0 pointer-events-none opacity-[0.03]">
-          <SignalField intensity="subtle" pattern="constellation" density="sparse" />
-        </div>
-
-        <div className="relative z-10">
-          {/* Abstract header strip */}
-          <div className="relative h-24 mb-12 overflow-hidden rounded-t-2xl">
-            <div className="absolute inset-0 bg-gradient-to-r from-brand-600/20 via-cool-500/15 via-cyan-500/20 to-brand-600/20" />
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-brand-500/10 via-transparent to-transparent" />
-            <div className="absolute inset-0 bg-mesh opacity-20" />
-            <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-          </div>
-
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-12">
+    <div className="min-h-screen bg-[#0A0F2D] text-white">
+      {/* ========== HERO ========== */}
+      <section
+        ref={heroRef}
+        className="relative overflow-hidden bg-gradient-to-b from-[#0A0F2D] via-[#1E2A5E]/80 to-[#0A0F2D] pt-16 pb-12 md:pt-20 md:pb-16 lg:pt-24 lg:pb-20"
+      >
+        <HeroPulseBackground />
+        <div className="container-width relative z-10">
+          <div className="grid lg:grid-cols-[1.1fr_1fr] gap-8 lg:gap-12 items-center">
             <div>
-              <span className="inline-block text-sm font-semibold text-brand-400 tracking-wide uppercase mb-3">
-                Results
-              </span>
-              <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold text-white tracking-tight mb-4">
-                Proven outcomes
-              </h2>
-              <p className="text-lg text-slate-300 max-w-2xl">
-                Real impact for real companies. See how we&apos;ve helped B2B tech companies accelerate growth.
-              </p>
-            </div>
-            <Link
-              href="/case-studies"
-            className="btn bg-white/5 backdrop-blur-sm border border-white/10 hover:bg-white/10 hover:border-brand-500/30 px-5 py-2.5 rounded-xl shrink-0 transition-all duration-300 group"
-            >
-            <span className="inline-flex items-center gap-2">
-              View All Case Studies
-              <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-            </span>
-            </Link>
-          </div>
-
-          <CardGrid columns={3}>
-            <StaggerContainer className="contents" noMotion={DIAGNOSTIC_NO_MOTION}>
-            {featuredCaseStudies.map((study) => (
-                <StaggerItem key={study.slug}>
-                  <CardGridItem>
-                <div className="relative bg-white/5 backdrop-blur-sm border border-white/10 h-full overflow-hidden rounded-2xl group hover:bg-white/10 hover:border-brand-500/40 transition-all duration-300 hover:-translate-y-2 hover:shadow-xl hover:shadow-brand-500/20">
-                  {/* Brighter top gradient bar */}
-                  <div className="h-1.5 bg-gradient-to-r from-brand-400 via-cool-400 via-cyan-400 to-brand-400 group-hover:from-brand-300 group-hover:via-cool-300 group-hover:via-cyan-300 group-hover:to-brand-300 transition-all duration-300" />
-                  
-                  {/* Faint inner glow on hover */}
-                      <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-brand-500/0 via-cool-500/0 to-cyan-500/0 group-hover:from-brand-500/10 group-hover:via-cool-500/10 group-hover:to-cyan-500/10 transition-all duration-300 opacity-0 group-hover:opacity-100 pointer-events-none" />
-                  
-                  <div className="relative z-10 p-6">
-                    <span className="inline-block text-xs font-medium text-slate-400 uppercase tracking-wider mb-3">
-                      {study.client}
-                    </span>
-                    <h3 className="font-semibold text-lg text-white group-hover:text-brand-300 transition-colors mb-2">
-                      {study.title}
-                    </h3>
-                    <p className="text-sm text-slate-300 leading-relaxed mb-4">
-                      {study.description}
-                    </p>
-                    <div className="grid grid-cols-3 gap-3 py-4 border-y border-white/10 mb-4">
-                      {study.metrics.slice(0, 3).map((metric) => (
-                        <div key={metric.label} className="text-center">
-                          <p className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-brand-300 via-brand-400 to-cool-400 bg-clip-text text-transparent">
-                            {metric.value}
-                          </p>
-                          <p className="text-xs text-slate-400 mt-1">{metric.label}</p>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="flex flex-wrap gap-1.5">
-                      {study.tags.slice(0, 3).map((tag) => (
-                        <span key={tag} className="text-xs text-slate-400 bg-white/5 px-2 py-0.5 rounded border border-white/10">
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </CardGridItem>
-                </StaggerItem>
-            ))}
-            </StaggerContainer>
-          </CardGrid>
-        </div>
-      </SectionDark>
-      </Reveal>
-
-      {/* ============================================
-          SECTION 6: WHY WORK WITH GTMSTACK
-          ============================================ */}
-      <Reveal noMotion={DIAGNOSTIC_NO_MOTION}>
-      <SectionLight variant="slate" padding="lg">
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-          <div>
-            <SectionHeader
-              label="Why Work With Us"
-              title="Strategy meets execution"
-              description="Most consulting firms deliver strategy decks. We deliver results. With 12+ years in B2B GTM, we bridge the gap between strategy and execution—where most companies fail."
-              className="mb-0"
-            />
-
-            <StaggerContainer className="mt-8 space-y-6 relative" noMotion={DIAGNOSTIC_NO_MOTION}>
-              {valueProps.map((prop, index) => {
-                const iconGradient = index % 2 === 0 
-                  ? 'from-brand-500 to-brand-600' 
-                  : 'from-cool-500 to-cyan-500'
-                
-                return (
-                  <StaggerItem key={prop} className="relative flex items-start gap-4">
-                    {/* Pathway connector line */}
-                    {index < valueProps.length - 1 && (
-                      <div className="absolute left-[11px] top-8 bottom-0 w-px bg-gradient-to-b from-slate-300 via-slate-200 to-transparent" />
-                    )}
-                    
-                    {/* Geometric line icon */}
-                    <div className={`relative shrink-0 mt-0.5 w-6 h-6 rounded flex items-center justify-center bg-gradient-to-br ${iconGradient} opacity-80`}>
-                      <svg
-                        className="w-4 h-4 text-white"
-                        fill="none"
-                        viewBox="0 0 16 16"
-                        stroke="currentColor"
-                        strokeWidth={2.5}
-                      >
-                        {index % 2 === 0 ? (
-                          // Diagonal line for brand
-                          <line x1="4" y1="4" x2="12" y2="12" />
-                        ) : (
-                          // Horizontal + vertical for cool
-                          <>
-                            <line x1="4" y1="8" x2="12" y2="8" />
-                            <line x1="8" y1="4" x2="8" y2="12" />
-                          </>
-                        )}
-                      </svg>
-                    </div>
-                    
-                    <span className="text-slate-700 leading-relaxed flex-1 pt-0.5">{prop}</span>
-                  </StaggerItem>
-                )
-              })}
-            </StaggerContainer>
-
-            <div className="mt-8 flex flex-wrap gap-4">
-              <Link
-                href="/about"
-                className="btn btn-primary px-6 py-3 rounded-xl animate-glow-pulse shadow-glow transition-all duration-300 hover:shadow-glow-violet group"
+              <motion.h1
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6 }}
+                className="font-display font-bold text-4xl sm:text-5xl md:text-6xl lg:text-7xl leading-[1.1] tracking-tight text-white"
               >
-                <span className="inline-flex items-center gap-2">
-                Learn More
-                  <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-                </span>
-              </Link>
-              <Link
-                href="/contact"
-                className="btn bg-white/5 backdrop-blur-sm border border-white/10 hover:bg-white/10 hover:border-brand-500/30 px-6 py-3 rounded-xl transition-all duration-300 group"
+                Turn Your Go-To-Market Into a Revenue Machine
+              </motion.h1>
+              <motion.p
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.1 }}
+                className="mt-5 text-lg md:text-xl text-slate-200 leading-relaxed max-w-2xl"
               >
-                <span className="inline-flex items-center gap-2">
-                Get Started
-                  <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-                </span>
-              </Link>
+                Strategic B2B GTM consulting that bridges strategy & execution. We build scalable
+                systems — unified ABM + RevOps + intent data — that deliver predictable, measurable
+                growth. $45M pipelines. 340% engagement lifts. 2.5x velocity. Real results, not theory.
+              </motion.p>
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+                className="mt-6 flex flex-wrap gap-4"
+              >
+                <Link
+                  href="/contact"
+                  className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl font-semibold text-white bg-[#00A8A8] hover:bg-[#00C4C4] transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(0,168,168,0.4)]"
+                >
+                  Get Started
+                  <ArrowRight className="w-5 h-5" />
+                </Link>
+                <Link
+                  href="/projects"
+                  className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl font-semibold text-[#0A0F2D] bg-[#FFD700] hover:bg-[#FFE44D] transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(255,215,0,0.35)]"
+                >
+                  View Proven Projects
+                </Link>
+              </motion.div>
             </div>
-          </div>
 
-            <div className="relative">
-              <div className="aspect-square rounded-3xl bg-gradient-to-br from-slate-100 to-slate-50 border border-slate-200/60 p-8 overflow-hidden">
-                <div className="absolute inset-0 bg-grid opacity-15" />
-                
-                {/* Abstract stack + signals visual */}
-                <div className="relative h-full flex flex-col justify-center">
-                  {/* Stacked layers */}
-                  <div className="relative mb-8">
-                    {[0, 1, 2].map((layer) => (
-                      <div
-                        key={layer}
-                        className="absolute left-1/2 -translate-x-1/2 rounded-lg border-2"
-                        style={{
-                          width: `${100 - layer * 15}%`,
-                          height: '60px',
-                          bottom: `${layer * 20}px`,
-                          borderColor: layer === 0 ? 'rgb(90 108 242 / 0.3)' : layer === 1 ? 'rgb(139 92 246 / 0.2)' : 'rgb(34 211 238 / 0.15)',
-                          backgroundColor: layer === 0 ? 'rgb(90 108 242 / 0.05)' : layer === 1 ? 'rgb(139 92 246 / 0.03)' : 'rgb(34 211 238 / 0.02)',
-                          transform: `translateX(-50%) translateY(${layer * 20}px)`,
-                        }}
-                      />
-                    ))}
-                  </div>
-
-                  {/* Signal dots/constellation */}
-                  <div className="relative h-32 flex items-center justify-center">
-                    {Array.from({ length: 12 }).map((_, i) => {
-                      const angle = (i / 12) * Math.PI * 2
-                      const radius = 40 + (i % 3) * 15
-                      const x = Math.cos(angle) * radius
-                      const y = Math.sin(angle) * radius
-                      const size = 4 + (i % 2) * 2
-                      const opacity = 0.4 + (i % 3) * 0.2
-                      
-                      return (
-                        <div
-                          key={i}
-                          className="absolute rounded-full bg-gradient-to-br from-brand-500 to-cool-500"
-                          style={{
-                            width: `${size}px`,
-                            height: `${size}px`,
-                            left: `calc(50% + ${x}px)`,
-                            top: `calc(50% + ${y}px)`,
-                            opacity,
-                            transform: 'translate(-50%, -50%)',
-                          }}
-                        />
-                      )
-                    })}
-                    
-                    {/* Connecting lines between signals - reduced opacity */}
-                    <svg className="absolute inset-0 w-full h-full opacity-15" viewBox="0 0 100 100" preserveAspectRatio="none">
-                      {Array.from({ length: 6 }).map((_, i) => {
-                        const angle1 = (i / 6) * Math.PI * 2
-                        const angle2 = ((i + 2) / 6) * Math.PI * 2
-                        const radius = 30
-                        const x1 = 50 + Math.cos(angle1) * radius
-                        const y1 = 50 + Math.sin(angle1) * radius
-                        const x2 = 50 + Math.cos(angle2) * radius
-                        const y2 = 50 + Math.sin(angle2) * radius
-                        
-                        return (
-                          <line
-                            key={i}
-                            x1={x1}
-                            y1={y1}
-                            x2={x2}
-                            y2={y2}
-                            stroke="rgb(90 108 242)"
-                            strokeWidth="0.5"
-                            strokeOpacity="0.3"
-                          />
-                        )
-                      })}
-                    </svg>
-                  </div>
-                </div>
+            {/* Preserved: Animated dashboard in upper right — do not delete or modify */}
+            <div className="relative hidden lg:block h-[320px] lg:h-[380px] xl:h-[420px]">
+              <div className="absolute inset-0 rounded-2xl overflow-hidden border border-white/10 bg-[#0A0F2D]/60 shadow-[0_0_60px_-15px_rgba(0,168,168,0.3)]">
+                <HeroDashboardVisual />
               </div>
             </div>
+          </div>
         </div>
-      </SectionLight>
-      </Reveal>
+      </section>
 
-      {/* ============================================
-          SECTION 7: FINAL CTA
-          ============================================ */}
-      <Reveal noMotion={DIAGNOSTIC_NO_MOTION}>
-        <SectionDark
-          variant="cta"
-          padding="lg"
-          motif="signal"
-          accentOrb
-          className="bg-gradient-to-br from-brand-900 via-brand-800 via-brand-700 to-brand-950"
-        >
-        {/* Converging route-line motif pointing toward primary CTA - reduced opacity */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          <svg className="absolute inset-0 w-full h-full opacity-15">
-            {/* Converging lines from edges toward center (where primary button is) */}
-            <defs>
-              <linearGradient id="routeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="rgb(90 108 242)" stopOpacity="0.3" />
-                <stop offset="50%" stopColor="rgb(139 92 246)" stopOpacity="0.4" />
-                <stop offset="100%" stopColor="rgb(34 211 238)" stopOpacity="0.3" />
-              </linearGradient>
-            </defs>
-            
-            {/* Lines converging from top corners */}
-            <line
-              x1="10%"
-              y1="20%"
-              x2="50%"
-              y2="65%"
-              stroke="url(#routeGradient)"
-              strokeWidth="1"
-              strokeDasharray="4 4"
-            />
-            <line
-              x1="90%"
-              y1="20%"
-              x2="50%"
-              y2="65%"
-              stroke="url(#routeGradient)"
-              strokeWidth="1"
-              strokeDasharray="4 4"
-            />
-            
-            {/* Lines converging from side edges */}
-            <line
-              x1="5%"
-              y1="40%"
-              x2="50%"
-              y2="65%"
-              stroke="url(#routeGradient)"
-              strokeWidth="1"
-              strokeDasharray="4 4"
-            />
-            <line
-              x1="95%"
-              y1="40%"
-              x2="50%"
-              y2="65%"
-              stroke="url(#routeGradient)"
-              strokeWidth="1"
-              strokeDasharray="4 4"
-            />
-            
-            {/* Central convergence point indicator */}
-            <circle
-              cx="50%"
-              cy="65%"
-              r="3"
-              fill="rgb(139 92 246)"
-              opacity="0.6"
-            />
-          </svg>
+      {/* ========== STATS PROOF GRID ========== */}
+      <section
+        ref={statsRef}
+        className="relative py-10 md:py-12 bg-gradient-to-b from-[#0A0F2D] via-[#1E2A5E]/50 to-[#0A0F2D]"
+      >
+        <div className="container-width">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={isStatsInView ? { opacity: 1 } : {}}
+            className="grid grid-cols-2 lg:grid-cols-5 gap-4 md:gap-5"
+          >
+            {STATS.map((stat, i) => {
+              const Icon = stat.icon
+              return (
+                <motion.div
+                  key={stat.label}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={isStatsInView ? { opacity: 1, y: 0 } : {}}
+                  transition={{ delay: i * 0.08, duration: 0.4 }}
+                  whileHover={{ scale: 1.02, boxShadow: '0 0 40px rgba(255,215,0,0.15)' }}
+                  className="relative rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm p-5 md:p-6 transition-all duration-300"
+                >
+                  <div className="flex items-center gap-2 mb-2">
+                    <Icon className="w-5 h-5 text-[#00A8A8]" />
+                  </div>
+                  <p className="text-3xl md:text-4xl lg:text-5xl font-bold text-[#FFD700] tabular-nums">
+                    {statValues[i] ?? stat.value}
+                  </p>
+                  <p className="text-xs md:text-sm text-slate-400 font-medium mt-1">{stat.label}</p>
+                </motion.div>
+              )
+            })}
+          </motion.div>
         </div>
+      </section>
 
-        <div className="relative z-10 max-w-4xl mx-auto text-center">
-            <h2 className="font-display text-3xl md:text-4xl font-bold text-white mb-4">
-              Ready to accelerate your GTM?
+      {/* ========== VALUE CARDS ========== */}
+      <section className="relative py-10 md:py-12 bg-[#0A0F2D]">
+        <div className="container-width">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
+            {VALUE_CARDS.map((card, i) => {
+              const Icon = card.icon
+              return (
+                <motion.div
+                  key={card.title}
+                  initial={{ opacity: 0, y: 16 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: '-40px' }}
+                  transition={{ delay: i * 0.06 }}
+                  whileHover={{ y: -4, scale: 1.02 }}
+                  className="group rounded-xl border border-white/10 bg-gradient-to-br from-[#1E2A5E]/60 to-[#0A0F2D] p-5 md:p-6 transition-all duration-300 hover:border-[#6A4C93]/40 hover:shadow-[0_8px_32px_rgba(106,76,147,0.15)]"
+                >
+                  <div className="w-10 h-10 rounded-lg bg-[#00A8A8]/20 flex items-center justify-center mb-3 group-hover:bg-[#00A8A8]/30 transition-colors">
+                    <Icon className="w-5 h-5 text-[#00A8A8]" />
+                  </div>
+                  <h3 className="font-bold text-lg text-white mb-2">{card.title}</h3>
+                  <p className="text-sm text-slate-300 leading-relaxed mb-4">{card.copy}</p>
+                  <Link
+                    href={card.href}
+                    className="inline-flex items-center gap-1 text-sm font-semibold text-[#00A8A8] hover:text-[#6A4C93] transition-colors"
+                  >
+                    Learn More
+                    <ChevronRight className="w-4 h-4" />
+                  </Link>
+                </motion.div>
+              )
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* ========== INTERACTIVE TIMELINE TEASER ========== */}
+      <section className="relative py-10 md:py-12 bg-gradient-to-b from-[#0A0F2D] via-[#1E2A5E]/40 to-[#0A0F2D] overflow-hidden">
+        <div className="container-width">
+          <div className="flex flex-wrap items-center justify-between gap-4 mb-5">
+            <h2 className="font-display text-2xl md:text-3xl font-bold text-white">
+              Proven Track Record
             </h2>
-            <p className="text-lg text-slate-300 mb-8">
-              Let&apos;s discuss how to turn your go-to-market into a competitive advantage.
-            </p>
-          <StaggerContainer className="flex flex-wrap items-center justify-center gap-4 relative" noMotion={DIAGNOSTIC_NO_MOTION}>
-            <StaggerItem>
-              <HoverScale>
-              <Link
-                href="/contact"
-                  className="relative btn bg-brand-500 text-white hover:bg-brand-400 px-6 py-3 text-base rounded-xl group shadow-glow transition-all duration-300 hover:shadow-glow-violet animate-glow-pulse overflow-visible will-change-[filter]"
+            <div className="flex gap-2">
+              {(['all', 'industry', 'expertise'] as const).map((f) => (
+                <button
+                  key={f}
+                  onClick={() => setTimelineFilter(f)}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium capitalize transition-all ${
+                    timelineFilter === f
+                      ? 'bg-[#6A4C93] text-white'
+                      : 'bg-white/5 text-slate-400 hover:bg-white/10 hover:text-slate-200 border border-white/10'
+                  }`}
+                >
+                  {f}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div
+            ref={timelineScrollRef}
+            className="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 scrollbar-hide"
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+          >
+            {TIMELINE_ITEMS.map((item, i) => (
+              <motion.div
+                key={item.title}
+                initial={{ opacity: 0, x: 20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.05 }}
+                whileHover={{ scale: 1.03, y: -2 }}
+                className="flex-shrink-0 w-[260px] md:w-[300px] rounded-xl border border-white/10 bg-[#1E2A5E]/50 p-5 backdrop-blur-sm hover:border-[#6A4C93]/40 transition-all duration-300 group"
               >
-                {/* Soft animated glow on hover - behind button - optimized */}
-                <div className="absolute -inset-2 rounded-xl bg-gradient-to-r from-cool-400/0 via-cool-400/0 to-cyan-400/0 group-hover:from-cool-400/40 group-hover:via-cool-400/50 group-hover:to-cyan-400/40 transition-all duration-500 opacity-0 group-hover:opacity-100 blur-xl -z-10 will-change-[opacity]" />
-                
-                {/* Inner glow on hover - optimized */}
-                <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-cool-400/0 via-cool-400/0 to-cyan-400/0 group-hover:from-cool-400/20 group-hover:via-cool-400/30 group-hover:to-cyan-400/20 transition-all duration-500 opacity-0 group-hover:opacity-100 blur-sm will-change-[opacity]" />
-                
-                <span className="relative z-10 flex items-center gap-2">
-                  Start a Conversation
-                  <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-                </span>
-              </Link>
-              </HoverScale>
-            </StaggerItem>
-            <StaggerItem>
-              <HoverScale>
-              <Link
-                href="/case-studies"
-                  className="btn bg-white/5 backdrop-blur-sm border border-white/10 hover:bg-white/10 hover:border-brand-500/30 px-6 py-3 text-base rounded-xl transition-all duration-300 group"
-              >
-                  <span className="inline-flex items-center gap-2">
-                View Case Studies
-                    <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-                  </span>
-              </Link>
-              </HoverScale>
-            </StaggerItem>
-          </StaggerContainer>
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-[#FFD700] font-bold">{item.year}</span>
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
+                    className="w-8 h-8 rounded-full bg-[#00A8A8]/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <Rocket className="w-4 h-4 text-[#00A8A8]" />
+                  </motion.div>
+                </div>
+                <h4 className="font-semibold text-white mb-1">{item.title}</h4>
+                <span className="text-xs text-slate-400">{item.tag}</span>
+              </motion.div>
+            ))}
+          </div>
         </div>
-      </SectionDark>
-      </Reveal>
-    </>
+      </section>
+
+      {/* ========== FINAL CTA ========== */}
+      <section className="relative py-14 md:py-16 bg-gradient-to-b from-[#1E2A5E] via-[#0A0F2D] to-[#0A0F2D]">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="container-width text-center max-w-3xl mx-auto"
+        >
+          <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4">
+            Ready to Build Your Growth Engine?
+          </h2>
+          <p className="text-lg md:text-xl text-slate-300 mb-8">
+            From strategy to execution — let&apos;s map your route to predictable revenue.
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-4">
+            <Link
+              href="/contact"
+              className="inline-flex items-center gap-2 px-8 py-4 rounded-xl font-semibold text-white bg-[#00A8A8] hover:bg-[#00C4C4] transition-all duration-300 hover:scale-[1.03] hover:shadow-[0_0_40px_rgba(0,168,168,0.45)]"
+            >
+              Start a Conversation
+              <ArrowRight className="w-5 h-5" />
+            </Link>
+            <Link
+              href="/case-studies"
+              className="inline-flex items-center gap-2 px-8 py-4 rounded-xl font-semibold text-[#0A0F2D] bg-[#FFD700] hover:bg-[#FFE44D] transition-all duration-300 hover:scale-[1.03] hover:shadow-[0_0_40px_rgba(255,215,0,0.35)]"
+            >
+              View Case Studies
+            </Link>
+          </div>
+        </motion.div>
+      </section>
+    </div>
   )
 }
